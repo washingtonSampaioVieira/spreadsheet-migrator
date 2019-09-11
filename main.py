@@ -1,11 +1,21 @@
-from modules.DataFormat import DataFormat
-from config.Products import PARABRISA_CLIENT_CONFIGURATION as config
-from modules.ExcelReader import ExcelReader
+from resources.Database import Database
+from config import DatabaseField
 
-formatter = DataFormat(config['data_format'])
-ex_reader = ExcelReader(config['filepath'], config['file_options'])
+db = Database()
 
-my_list = ex_reader.read_file(formatter.format, 1)
+c = {
+    DatabaseField.NAME: 'CINETRAN C. DE INSP. E EQ. DE TRANSP. LTDA',
+    DatabaseField.CNPJ: '05.632.361/0001-74',
+    DatabaseField.CITY: 'DUQUE DE CAXIAS',
+    DatabaseField.UF: 'RJ',
+    DatabaseField.ADDRESS: 'ROD.WASHINGTON LUIZ 1951 - PARQUE DUQUE',
+    DatabaseField.CEP: '25085-008',
+    DatabaseField.COMPANY_MANAGER: 'CARLOS ROBERTO',
+    DatabaseField.PHONE: '2136537800',
+    DatabaseField.EMAIL: 'cinetran@cinetran.com.br',
+    DatabaseField.LICENCE: ''
+}
 
-for item in my_list:
-  print(item)
+
+i = db.insert_owner(c)
+print(i)
