@@ -1,21 +1,29 @@
 from resources.Database import Database
-from config import DatabaseField
+from resources.ExcelReader import ExcelReader
+from resources.DataFormat import DataFormat
+from config import Products, DatabaseField
 
 db = Database()
+product_config = Products.ParabrisaClient()
+formatter = DataFormat(product_config.data_format)
 
-c = {
-    DatabaseField.NAME: 'CINETRAN C. DE INSP. E EQ. DE TRANSP. LTDA',
-    DatabaseField.CNPJ: '05.632.361/0001-74',
-    DatabaseField.CITY: 'DUQUE DE CAXIAS',
-    DatabaseField.UF: 'RJ',
-    DatabaseField.ADDRESS: 'ROD.WASHINGTON LUIZ 1951 - PARQUE DUQUE',
-    DatabaseField.CEP: '25085-008',
-    DatabaseField.COMPANY_MANAGER: 'CARLOS ROBERTO',
-    DatabaseField.PHONE: '2136537800',
-    DatabaseField.EMAIL: 'cinetran@cinetran.com.br',
-    DatabaseField.LICENCE: ''
-}
+ex_reader = ExcelReader(product_config.filepath, product_config.file_options)
+client = ex_reader.read_file(formatter.format, 1)[0]
 
+owner_exists = db.owner_exists(client[DatabaseField.CNPJ])
 
-i = db.insert_owner(c)
-print(i)
+if owner_exists:
+    client_is_up_to_date = db.compare_owner_info(client, formatter.format_db)
+    print(client_is_up_to_date)
+    # if client_is_up_to_date:
+    #     print('Client already inserted')
+    # else:
+    #     # TODO: Update client info
+    #     pass
+else:
+    sucess = db.insert_owner(client)
+
+    if sucess:
+        print('Owner inserted with sucess')
+    else:
+        print('Error on inserting owner')

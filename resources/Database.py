@@ -51,46 +51,35 @@ class Database:
             return False
 
         cursor = self.connection.cursor(dictionary=True)
-        owner_exists = self.owner_exists(client_data[DatabaseField.CNPJ])
+        query = 'call cadastro_proprietario(%s, %s, %s, %s, %s, %s, %s, %s, "", %s, @erro)'
 
-        if owner_exists:
-            logger.debug("Owner %s exists, comparing info" % client_data[DatabaseField.CNPJ])
-            client_is_up_to_date = self.compare_owner_info(client_data)
+        try:
+            cursor.execute(query, (
+                client_data[DatabaseField.NAME],
+                client_data[DatabaseField.CNPJ],
+                client_data[DatabaseField.CITY],
+                client_data[DatabaseField.UF],
+                client_data[DatabaseField.ADDRESS],
+                client_data[DatabaseField.CEP],
+                client_data[DatabaseField.COMPANY_MANAGER],
+                client_data[DatabaseField.PHONE],
+                client_data[DatabaseField.EMAIL]
+            ))
 
-            if client_is_up_to_date:
-                return True
-            else:
-                return False
-        else:
-            query = 'call cadastro_proprietario(%s, %s, %s, %s, %s, %s, %s, %s, "", %s, @erro)'
+            db.commit()
 
-            try:
-                cursor.execute(query, (
-                    client_data[DatabaseField.NAME],
-                    client_data[DatabaseField.CNPJ],
-                    client_data[DatabaseField.CITY],
-                    client_data[DatabaseField.UF],
-                    client_data[DatabaseField.ADDRESS],
-                    client_data[DatabaseField.CEP],
-                    client_data[DatabaseField.COMPANY_MANAGER],
-                    client_data[DatabaseField.PHONE],
-                    client_data[DatabaseField.EMAIL]
-                ))
+            query = 'select @erro'
+            cursor.execute(query)
 
-                db.commit()
+            result = cursor.fetchone()
 
-                query = 'select @erro'
-                cursor.execute(query)
+            logger.info('Owner %s inserted' % client_data[DatabaseField.CNPJ])
+            return result['@erro'] == 'Cadastrado'
+        except mysql.errors.ProgrammingError and mysql.errors.IntegrityError as error:
+            logger.error("Something went wrong on insert_client function.\n\tDetails: %s" % error.msg)
+            return False
 
-                result = cursor.fetchone()
-
-                logger.info('Owner %s inserted' % client_data[DatabaseField.CNPJ])
-                return result['@erro'] == 'Cadastrado'
-            except mysql.errors.ProgrammingError and mysql.errors.IntegrityError as error:
-                logger.error("Something went wrong on insert_client function.\n\tDetails: %s" % error.msg)
-                return False
-
-    def compare_owner_info(self, client_data):
+    def compare_owner_info(self, client_data, format):
         db = self.connection
 
         if db is None:
@@ -102,22 +91,11 @@ class Database:
         try:
             cursor.execute(query, (client_data[DatabaseField.CNPJ],))
 
-            db_data = cursor.fetchone()
+            db_data = format(cursor.fetchone())
 
-            db_data.pop(DatabaseField.ID, None)
-            client_data.pop(DatabaseField.ID, None)
+            # logger.debug('Client: %s\n\tDB data: %s\n\tReal data: %s' % (client_data[DatabaseField.CNPJ], db_data, client_data))
 
-            logger.debug('Client: %s\n\tDB data: %s\n\tReal data: %s' % (client_data[DatabaseField.CNPJ], db_data, client_data))
-
-            # TODO: Compare info between both owners if is already registered
-            # TODO: Format owners info before comparing
-            if db_data == client_data:
-                print('Clients are equal')
-                return True
-            else:
-                # TODO: Update owner info
-                print('Clients are different')
-                return False
+            return True
         except mysql.errors.ProgrammingError as error:
             logger.error("Something went wrong on compare_owner_info function.\n\tDetails: %s" % error.msg)
             return False

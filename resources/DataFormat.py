@@ -5,6 +5,17 @@ class DataFormat:
     def __init__(self, custom_format):
         self.custom_format = custom_format
 
+    def format_db(self, data):
+        formatted_obj = {}
+
+        for value in self.custom_format.items():
+            key = value[0]
+            format_function = value[1][1]
+
+            data_value = data[key]
+            new_data = format_function(data_value)
+            print(new_data)
+
     def format(self, obj_id, data):
         formatted_obj = {DatabaseField.ID: obj_id}
 
