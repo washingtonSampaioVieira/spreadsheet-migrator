@@ -62,19 +62,24 @@ class ParabrisaClient:
     @property
     def data_format(self):
         return {
-            DatabaseField.CNPJ: (self.properties[DatabaseField.CNPJ], DataType.STR),
             DatabaseField.NAME: (self.properties[DatabaseField.NAME], DataType.STR),
+            DatabaseField.CNPJ: (self.properties[DatabaseField.CNPJ], DataType.STR),
+            DatabaseField.CITY: (self.properties[DatabaseField.CITY], DataType.STR),
+            DatabaseField.UF: (self.properties[DatabaseField.UF], DataType.STR),
             DatabaseField.ADDRESS: (self.properties[DatabaseField.ADDRESS], DataType.STR),
+            DatabaseField.CEP: (self.properties[DatabaseField.CEP], DataType.STR),
+            DatabaseField.COMPANY_MANAGER: (self.properties[DatabaseField.COMPANY_MANAGER], DataType.STR),
             DatabaseField.PHONE: (self.get_phone, DataType.PHONE),
             DatabaseField.EMAIL: (self.properties[DatabaseField.EMAIL], DataType.EMAIL)
         }
 
     def get_phone(self, data, treatment_function):
-        phone_list = []
+        formatted_phone_list = []
 
-        for phone in self.properties[DatabaseField.PHONE]:
-            value = data[phone]
+        for phone_key in self.properties[DatabaseField.PHONE]:
+            value = data[phone_key]
             if type(value) != float:
-                phone_list.append(treatment_function(value))
+                formatted_phone_list.append(treatment_function(value))
 
-        return phone_list
+        phones_str_list = ';'.join(formatted_phone_list)
+        return phones_str_list

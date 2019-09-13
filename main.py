@@ -13,17 +13,24 @@ client = ex_reader.read_file(formatter.format, 1)[0]
 owner_exists = db.owner_exists(client[DatabaseField.CNPJ])
 
 if owner_exists:
-    client_is_up_to_date = db.compare_owner_info(client, formatter.format_db)
-    print(client_is_up_to_date)
-    # if client_is_up_to_date:
-    #     print('Client already inserted')
-    # else:
-    #     # TODO: Update client info
-    #     pass
-else:
-    sucess = db.insert_owner(client)
+    data_diff = db.compare_owner_info(client, formatter.format_db)
 
-    if sucess:
+    if data_diff == {}:
+        print('Client already inserted')
+    else:
+        diffs = []
+        for item in data_diff['values_changed'].items():
+            key = item[0]
+            key = key[key.index('\'') + 1:key.index(']') - 1]
+            new_value = item[1]
+
+            diffs.append({'key': key, 'new_value': new_value})
+
+        # TODO: Call db update_owner_info
+else:
+    success = db.insert_owner(client)
+
+    if success:
         print('Owner inserted with sucess')
     else:
         print('Error on inserting owner')

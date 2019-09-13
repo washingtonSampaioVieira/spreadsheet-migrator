@@ -10,11 +10,15 @@ class DataFormat:
 
         for value in self.custom_format.items():
             key = value[0]
-            format_function = value[1][1]
+            data_properties = value[1]
+            format_function = data_properties[1]
 
             data_value = data[key]
-            new_data = format_function(data_value)
-            print(new_data)
+            formatted_data = format_function(data_value)
+
+            formatted_obj[key] = formatted_data
+
+        return formatted_obj
 
     def format(self, obj_id, data):
         formatted_obj = {DatabaseField.ID: obj_id}
