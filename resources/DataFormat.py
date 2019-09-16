@@ -13,6 +13,7 @@ class DataFormat:
             data_properties = value[1]
             format_function = data_properties[1]
 
+            # TODO: Tratar caso em que o proprietário tem mais de um número de telefone ou email
             data_value = data[key]
             formatted_data = format_function(data_value)
 

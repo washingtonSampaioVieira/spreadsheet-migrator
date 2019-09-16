@@ -19,14 +19,20 @@ if owner_exists:
         print('Client already inserted')
     else:
         diffs = []
+
         for item in data_diff['values_changed'].items():
             key = item[0]
             key = key[key.index('\'') + 1:key.index(']') - 1]
-            new_value = item[1]
+            new_value = item[1]['new_value']
 
             diffs.append({'key': key, 'new_value': new_value})
 
-        # TODO: Call db update_owner_info
+        sucess = db.update_owner(client[DatabaseField.CNPJ], diffs)
+
+        if sucess:
+            print('Client info updated with sucess')
+        else:
+            print('Error on updating client')
 else:
     success = db.insert_owner(client)
 

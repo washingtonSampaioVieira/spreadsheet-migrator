@@ -17,9 +17,11 @@ def STR(value):
 
 
 def PHONE(value):
-    value = value.replace('(', '')
-    value = value.replace(')', '')
-    value = value.replace('-', '')
+    if value is not None and type(value) != float:
+        value = value.replace('(', '')
+        value = value.replace(')', '')
+        value = value.replace('-', '')
+        value = value + ';'
 
     return value
 

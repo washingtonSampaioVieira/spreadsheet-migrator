@@ -123,16 +123,57 @@ class Database:
             logger.error("Something went wrong on compare_owner_info function.\n\tDetails: %s" % error.msg)
             return False
 
-    def update_owner(self, diffs):
+    def update_owner(self, cnpj, diffs):
         db = self.connect()
 
         if db is None:
             return False
 
-        cursor = db.cursor()
+        cursor = db.cursor(dictionary=True)
+
+        obj_to_insert = {
+            DatabaseField.CNPJ: cnpj,
+            DatabaseField.NAME: '',
+            DatabaseField.ADDRESS: '',
+            DatabaseField.CEP: '',
+            DatabaseField.CITY: '',
+            DatabaseField.COMPANY_MANAGER: '',
+            DatabaseField.PHONE: '',
+            DatabaseField.EMAIL: '',
+        }
 
         for diff in diffs:
-            key = diff[key]
+            key = diff['key']
+            value = diff['new_value']
 
-        query = ''
+            obj_to_insert[key] = value
 
+        query = ('call atualizar_proprietario('
+                 '%(' + DatabaseField.CNPJ + ')s, '
+                 + '%(' + DatabaseField.NAME + ')s,'
+                 + '%(' + DatabaseField.ADDRESS + ')s, '
+                 + '%(' + DatabaseField.CEP + ')s, '
+                 + '%(' + DatabaseField.CITY + ')s, '
+                 + '%(' + DatabaseField.COMPANY_MANAGER + ')s,'
+                 + '%(' + DatabaseField.PHONE + ')s, '
+                 + '%(' + DatabaseField.EMAIL + ')s,'
+                 + '@resultado)')
+
+        try:
+            cursor.execute(query, obj_to_insert)
+
+            db.commit()
+
+            query = 'select @resultado'
+            cursor.execute(query)
+
+            result = cursor.fetchone()
+
+            db.close()
+
+            logger.info('Owner %s updated' % cnpj)
+            return result['@resultado'] >= 1
+        except mysql.errors.ProgrammingError as error:
+            print(cursor.statement)
+            logger.error("Something went wrong on update_owner function.\n\tDetails: %s" % error.msg)
+            return False
