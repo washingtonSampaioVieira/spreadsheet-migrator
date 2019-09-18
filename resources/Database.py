@@ -28,11 +28,96 @@ class Database:
 
         return connection
 
-    def insert_solicitation(self):
-        # TODO: Check if owner is registered
+    def solicitation_exists(self, solicitation_code, model_id):
+        db = self.connect()
+
+        if db is None:
+            return False
+
+        cursor = db.cursor(dictionary=True, buffered=True)
+        query = 'select cod_autorizacao from tbl_autorizacao  where cod_autorizacao = %s and modelo_id = %s'
+
+        try:
+            cursor.execute(query, (solicitation_code, model_id))
+
+            row_count = cursor.rowcount
+            db.close()
+
+            return row_count != 0
+        except mysql.errors.ProgrammingError as error:
+            logger.error("Something went wrong on solicitation_exists function.\n\tDetails: %s" % error.msg)
+            return False
+
+    def insert_solicitation(self, solicitation):
+        db = self.connect()
+
+        if db is None:
+            return False
+
+        solicitation[DatabaseField.OWNER_ID] = self.get_owner_id(solicitation[DatabaseField.CNPJ])
+
+        cursor = db.cursor()
+        query = (
+            'insert into tbl_autorizacao(proprietario_id, cod_autorizacao, numero_serie_inicial, numero_serie_final, '
+            'qtde, data_entrada, modelo_id) '
+            'values(%s, %s, %s, %s, %s, %s, %s)'
+        )
+
+        logger.info('Inserting solicitation %s' % solicitation)
+
+        try:
+            cursor.execute(query, (
+                solicitation[DatabaseField.OWNER_ID],
+                solicitation[DatabaseField.ID],
+                solicitation[DatabaseField.INITIAL_NUMBER],
+                solicitation[DatabaseField.FINAL_NUMBER],
+                solicitation[DatabaseField.QUANTITY],
+                solicitation[DatabaseField.ENTRY_DATE],
+                solicitation[DatabaseField.MODEL_ID]
+            ))
+
+            db.commit()
+
+            row_count = cursor.rowcount
+            db.close()
+
+            return row_count != 0
+        except mysql.errors.ProgrammingError as error:
+            logger.error("Something went wrong on insert_solicitation function.\n\tDetails: %s" % error.msg)
+            return False
+
         # TODO: Check if solicitation is already on database
         # TODO: Insert solicitation
         pass
+
+    def get_owner_id(self, cnpj):
+        db = self.connect()
+
+        owner_id = 0
+
+        if db is None:
+            return owner_id
+
+        cursor = db.cursor(dictionary=True, buffered=True)
+        query = 'select proprietario_id from tbl_proprietario where cnpj = %s limit 1'
+
+        try:
+            cursor.execute(query, (cnpj, ))
+
+            if cursor.rowcount == 0:
+                return owner_id
+
+            logger.info('Fetching owner id from cnpj: %s' % cnpj)
+
+            owner = cursor.fetchone()
+            owner_id = owner['proprietario_id']
+
+            db.close()
+
+            return owner_id
+        except mysql.errors.ProgrammingError as error:
+            logger.error("Something went wrong on get_owner_id function.\n\tDetails: %s" % error.msg)
+            return owner_id
 
     def owner_exists(self, cnpj):
         db = self.connect()
@@ -47,8 +132,8 @@ class Database:
             cursor.execute(query, (cnpj,))
 
             row_count = cursor.rowcount
-
             db.close()
+
             return row_count != 0
         except mysql.errors.ProgrammingError as error:
             logger.error("Something went wrong on owner_exists function.\n\tDetails: %s" % error.msg)
@@ -98,15 +183,14 @@ class Database:
             return False
 
         cursor = db.cursor(dictionary=True)
-        query = 'select * from vw_info_proprietario where cnpj = %s'
+        query = 'select * from vw_info_proprietario where cnpj = %s limit 1'
 
         try:
             cursor.execute(query, (client_data[DatabaseField.CNPJ],))
 
-            # TODO: Tratar caso em que o proprietário tem mais de um número de telefone ou email
             db_data = format_function(cursor.fetchone())
 
-            # Removendo o ID do objeto
+            # Removendo o ID do objeto (Os ID's da planilha e do banco são diferentes)
             client_data.pop('id')
 
             logger.debug('Client: %s\n\tDB data: %s\n\tReal data: %s' % (
@@ -148,16 +232,18 @@ class Database:
 
             obj_to_insert[key] = value
 
+        logger.info('Info to update on client %s:\n\t%s' % (cnpj, obj_to_insert))
+
         query = ('call atualizar_proprietario('
                  '%(' + DatabaseField.CNPJ + ')s, '
-                 + '%(' + DatabaseField.NAME + ')s,'
-                 + '%(' + DatabaseField.ADDRESS + ')s, '
-                 + '%(' + DatabaseField.CEP + ')s, '
-                 + '%(' + DatabaseField.CITY + ')s, '
-                 + '%(' + DatabaseField.COMPANY_MANAGER + ')s,'
-                 + '%(' + DatabaseField.PHONE + ')s, '
-                 + '%(' + DatabaseField.EMAIL + ')s,'
-                 + '@resultado)')
+                 '%(' + DatabaseField.NAME + ')s,'
+                 '%(' + DatabaseField.ADDRESS + ')s, '
+                 '%(' + DatabaseField.CEP + ')s, '
+                 '%(' + DatabaseField.CITY + ')s, '
+                 '%(' + DatabaseField.COMPANY_MANAGER + ')s,'
+                 '%(' + DatabaseField.PHONE + ')s, '
+                 '%(' + DatabaseField.EMAIL + ')s,'
+                 '@resultado)')
 
         try:
             cursor.execute(query, obj_to_insert)

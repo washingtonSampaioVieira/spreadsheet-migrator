@@ -4,39 +4,21 @@ from resources.DataFormat import DataFormat
 from config import Products, DatabaseField
 
 db = Database()
-product_config = Products.ParabrisaClient()
+product_config = Products.ParabrisaSolicitation()
 formatter = DataFormat(product_config.data_format)
 
 ex_reader = ExcelReader(product_config.filepath, product_config.file_options)
-client = ex_reader.read_file(formatter.format, 1)[0]
+solicitations = ex_reader.read_file(formatter.format, limit=1)
 
-owner_exists = db.owner_exists(client[DatabaseField.CNPJ])
+for solicitation in solicitations:
+    solicitation_exists = db.solicitation_exists(solicitation[DatabaseField.ID], solicitation[DatabaseField.MODEL_ID])
 
-if owner_exists:
-    data_diff = db.compare_owner_info(client, formatter.format_db)
-
-    if data_diff == {}:
-        print('Client already inserted')
+    if solicitation_exists:
+        print('Solicitation %s already inserted' % solicitation[DatabaseField.ID])
     else:
-        diffs = []
-
-        for item in data_diff['values_changed'].items():
-            key = item[0]
-            key = key[key.index('\'') + 1:key.index(']') - 1]
-            new_value = item[1]['new_value']
-
-            diffs.append({'key': key, 'new_value': new_value})
-
-        sucess = db.update_owner(client[DatabaseField.CNPJ], diffs)
+        sucess = db.insert_solicitation(solicitation)
 
         if sucess:
-            print('Client info updated with sucess')
+            print('Solicitation %s inserted with sucess' % solicitation[DatabaseField.ID])
         else:
-            print('Error on updating client')
-else:
-    success = db.insert_owner(client)
-
-    if success:
-        print('Owner inserted with sucess')
-    else:
-        print('Error on inserting owner')
+            print('There was an erro on inserting solicitation %s' % solicitation[DatabaseField.ID])

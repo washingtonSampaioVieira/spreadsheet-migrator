@@ -1,3 +1,5 @@
+import re
+
 def DATA(value):
     return value
 
@@ -18,16 +20,14 @@ def STR(value):
 
 def PHONE(value):
     if value is not None and type(value) != float:
-        value = value.replace('(', '')
-        value = value.replace(')', '')
-        value = value.replace('-', '')
-        value = value + ';'
+        value = re.sub(r'[\(\)\-" "]', '', value)
 
     return value
 
 
 def EMAIL(value):
-    if len(value.split(';')) == 1:
-        value += ';'
+    # Coletando apenas o primeiro email
+    if type(value) != float:
+        return value.split(';')[0]
 
     return value

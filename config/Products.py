@@ -1,14 +1,16 @@
 from . import DataType
 from . import DatabaseField
 
+
 class ParabrisaSolicitation:
     filepath = 'C:\\Users\\gabriel.navevaiko\\Desktop\\GNV\\pára-brisa\\Solicitações\\SOLICITAÇÃO 1.xlsx'
 
     properties = {
-        'data': 'Data',
-        'inicial_number': 'Nº Inicial',
-        'final_number': 'Nº Final',
-        'cnpj': 'CNPJ'
+        DatabaseField.ENTRY_DATE: 'Data',
+        DatabaseField.INITIAL_NUMBER: 'Nº Inicial',
+        DatabaseField.FINAL_NUMBER: 'Nº Final',
+        DatabaseField.CNPJ: 'CNPJ',
+        DatabaseField.QUANTITY: 'QTD'
     }
 
     @property
@@ -22,18 +24,16 @@ class ParabrisaSolicitation:
     @property
     def data_format(self):
         return {
-            'data': (self.properties['cnpj'], DataType.DATA),
-            'inicial_number': (self.properties['inicial_number'], DataType.INT),
-            'final_number': (self.properties['final_number'], DataType.INT),
-            'cnpj': (self.properties['cnpj'], DataType.STR),
-            'quantity': (self.get_quantity, DataType.INT)
+            DatabaseField.ENTRY_DATE: (self.properties[DatabaseField.ENTRY_DATE], DataType.DATA),
+            DatabaseField.INITIAL_NUMBER: (self.properties[DatabaseField.INITIAL_NUMBER], DataType.INT),
+            DatabaseField.FINAL_NUMBER: (self.properties[DatabaseField.FINAL_NUMBER], DataType.INT),
+            DatabaseField.CNPJ: (self.properties[DatabaseField.CNPJ], DataType.STR),
+            DatabaseField.QUANTITY: (self.properties[DatabaseField.QUANTITY], DataType.INT),
+            DatabaseField.MODEL_ID: (self.get_model_id, DataType.INT)
         }
 
-    def get_quantity(self, data, treatment_function):
-        inicial_number = data[self.properties['inicial_number']]
-        final_number = data[self.properties['final_number']]
-
-        return treatment_function(final_number - inicial_number + 1)
+    def get_model_id(self, data, treatment_function):
+        return treatment_function(5)
 
 
 class ParabrisaClient:
