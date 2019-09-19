@@ -1,43 +1,64 @@
 from resources.Database import Database
 from resources.ExcelReader import ExcelReader
 from resources.DataFormat import DataFormat
-from config import Products, DatabaseField
+from resources.Logger import Logger
+from config import DatabaseField
 
-db = Database()
-product_config = Products.ParabrisaClient()
-formatter = DataFormat(product_config.data_format)
 
-ex_reader = ExcelReader(product_config.filepath, product_config.file_options)
-clients = ex_reader.read_file(formatter.format, limit=3)
+class Client:
+    def __init__(self):
+        self.logger = Logger('client_module.log')
 
-for client in clients:
-    owner_exists = db.owner_exists(client[DatabaseField.CNPJ])
+    def insert_clients(self, product_config):
+        db = Database()
+        formatter = DataFormat(product_config.data_format)
 
-    if owner_exists:
-        data_diff = db.compare_owner_info(client, formatter.format_db)
+        ex_reader = ExcelReader(product_config.filepath, product_config.file_options)
+        clients = ex_reader.read_file(formatter.format, limit=3)
 
-        if data_diff == {}:
-            print('Client already inserted')
-        else:
-            diffs = []
+        inserted_clients_count = 0
+        total_clients = len(clients)
 
-            for item in data_diff['values_changed'].items():
-                key = item[0]
-                key = key[key.index('\'') + 1:key.index(']') - 1]
-                new_value = item[1]['new_value']
+        for client in clients:
+            cnpj = client[DatabaseField.CNPJ]
 
-                diffs.append({'key': key, 'new_value': new_value})
+            owner_exists = db.owner_exists(cnpj)
 
-            sucess = db.update_owner(client[DatabaseField.CNPJ], diffs)
+            if owner_exists:
+                self.logger.info('Owner %s exists, comparing info' % cnpj)
+                client_diff = db.compare_owner_info(client, formatter.format_db)
 
-            if sucess:
-                print('Client info updated with sucess')
+                if client_diff == {}:
+                    self.logger.info('Client %s already inserted' % cnpj)
+                    inserted_clients_count += 1
+                else:
+                    diffs = []
+
+                    for item in client_diff['values_changed'].items():
+                        key = item[0]
+                        key = key[key.index('\'') + 1:key.index(']') - 1]
+                        new_value = item[1]['new_value']
+
+                        diffs.append({'key': key, 'new_value': new_value})
+
+                    self.logger.debug('Updating client %s\n\tData:' % diffs)
+                    sucess = db.update_owner(cnpj, diffs)
+
+                    if sucess:
+                        self.logger.info('Client %s updated' % cnpj)
+                        inserted_clients_count += 1
+                    else:
+                        self.logger.error('Error updating client %s' % cnpj)
             else:
-                print('Error on updating client')
-    else:
-        success = db.insert_owner(client)
+                sucess = db.insert_owner(client)
 
-        if success:
-            print('Owner inserted with sucess')
-        else:
-            print('Error on inserting owner')
+                if sucess:
+                    self.logger.info('Client %s inserted' % cnpj)
+                    inserted_clients_count += 1
+                else:
+                    self.logger.error('Error inserting client %s' % cnpj)
+
+        failed_clients_count = total_clients - inserted_clients_count
+
+        self.logger.info('Inserted clients: \n\tSucess: %s\n\tFailure: %s' %
+                         (inserted_clients_count, failed_clients_count))
