@@ -4,22 +4,20 @@ import os
 from config import Logs
 
 
-class Logger:
-    def __init__(self, filename):
-        load_dotenv()
+def create_logger(logger_name, file_name):
+    load_dotenv()
 
-        # Configuração padrão para os Logs
-        logging.basicConfig(
-            level=os.getenv('LOGGER_LEVEL'),
-            datefmt='%d/%m/%Y %H:%M:%S',
-            format='%(levelname)s: %(message)s. Logged at %(asctime)s',
-            handlers=[logging.FileHandler(Logs.LOG_FILE_PATH + filename, 'a+', 'utf-8')]
-        )
+    logger = logging.getLogger(logger_name)
+    handler = logging.FileHandler(Logs.LOG_FILE_PATH + file_name, 'a+', 'utf-8')
 
-    def info(self, message): logging.info(message)
+    formatter = logging.Formatter('%(levelname)s: %(message)s. Logged at %(asctime)s')
+    formatter.datefmt = '%d/%m/%Y %H:%M:%S'
 
-    def error(self, message): logging.error(message)
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
 
-    def warning(self, message): logging.warning(message)
+    logger.setLevel(logging.INFO if os.getenv('LOGGER_LEVEL') else logging.DEBUG)
 
-    def debug(self, message): logging.debug(message)
+    logger.info('Initiating logger %s on file %s' % (logger_name, file_name))
+
+    return logger

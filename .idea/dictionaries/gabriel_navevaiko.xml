@@ -2,6 +2,7 @@
   <dictionary name="gabriel.navevaiko">
     <words>
       <w>cnpj</w>
+      <w>datefmt</w>
       <w>sucess</w>
     </words>
   </dictionary>

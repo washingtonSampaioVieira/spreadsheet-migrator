@@ -1,13 +1,13 @@
 from resources.Database import Database
 from resources.ExcelReader import ExcelReader
 from resources.DataFormat import DataFormat
-from resources.Logger import Logger
+from resources import Logger
 from config import DatabaseField
 
 
 class Solicitation:
     def __init__(self):
-        self.logger = Logger('solicitation_module.log')
+        self.logger = Logger.create_logger('SolicitationModule', 'solicitation_module.log')
 
     def insert_solicitations(self, product_config):
         db = Database()

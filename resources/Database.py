@@ -3,15 +3,15 @@ from dotenv import load_dotenv
 from deepdiff import DeepDiff
 import mysql.connector as mysql
 
-from . import Logger as LogModule
+from . import Logger
 from config import DatabaseField
-
-logger = LogModule.Logger('database.log')
 
 
 class Database:
-    @staticmethod
-    def connect():
+    def __init__(self):
+        self.logger = Logger.create_logger('Database', 'database.log')
+
+    def connect(self):
         connection = None
 
         load_dotenv()
@@ -24,7 +24,7 @@ class Database:
         try:
             connection = mysql.connect(host=db_hostname, user=db_user, passwd=db_pass, database=db_name)
         except mysql.errors.InterfaceError:
-            logger.error('Error connecting to database, check .env file')
+            self.logger.error('Error connecting to database, check .env file')
 
         return connection
 
@@ -45,7 +45,7 @@ class Database:
 
             return row_count != 0
         except mysql.errors.ProgrammingError as error:
-            logger.error("Something went wrong on solicitation_exists function.\n\tDetails: %s" % error.msg)
+            self.logger.error("Something went wrong on solicitation_exists function.\n\tDetails: %s" % error.msg)
             return False
 
     def insert_solicitation(self, solicitation):
@@ -63,7 +63,7 @@ class Database:
             'values(%s, %s, %s, %s, %s, %s, %s)'
         )
 
-        logger.info('Inserting solicitation %s' % solicitation)
+        self.logger.info('Inserting solicitation %s' % solicitation)
 
         try:
             cursor.execute(query, (
@@ -83,7 +83,7 @@ class Database:
 
             return row_count != 0
         except mysql.errors.ProgrammingError as error:
-            logger.error("Something went wrong on insert_solicitation function.\n\tDetails: %s" % error.msg)
+            self.logger.error("Something went wrong on insert_solicitation function.\n\tDetails: %s" % error.msg)
             return False
 
         # TODO: Check if solicitation is already on database
@@ -107,7 +107,7 @@ class Database:
             if cursor.rowcount == 0:
                 return owner_id
 
-            logger.info('Fetching owner id from cnpj: %s' % cnpj)
+            self.logger.info('Fetching owner id from cnpj: %s' % cnpj)
 
             owner = cursor.fetchone()
             owner_id = owner['proprietario_id']
@@ -116,7 +116,7 @@ class Database:
 
             return owner_id
         except mysql.errors.ProgrammingError as error:
-            logger.error("Something went wrong on get_owner_id function.\n\tDetails: %s" % error.msg)
+            self.logger.error("Something went wrong on get_owner_id function.\n\tDetails: %s" % error.msg)
             return owner_id
 
     def owner_exists(self, cnpj):
@@ -136,7 +136,7 @@ class Database:
 
             return row_count != 0
         except mysql.errors.ProgrammingError as error:
-            logger.error("Something went wrong on owner_exists function.\n\tDetails: %s" % error.msg)
+            self.logger.error("Something went wrong on owner_exists function.\n\tDetails: %s" % error.msg)
             return False
 
     def insert_owner(self, client_data):
@@ -170,10 +170,10 @@ class Database:
 
             db.close()
 
-            logger.info('Owner %s inserted' % client_data[DatabaseField.CNPJ])
+            self.logger.info('Owner %s inserted' % client_data[DatabaseField.CNPJ])
             return result['@erro'] == 'Cadastrado'
         except mysql.errors.ProgrammingError and mysql.errors.IntegrityError as error:
-            logger.error("Something went wrong on insert_client function.\n\tDetails: %s" % error.msg)
+            self.logger.error("Something went wrong on insert_client function.\n\tDetails: %s" % error.msg)
             return False
 
     def compare_owner_info(self, client_data, format_function):
@@ -193,7 +193,7 @@ class Database:
             # Removendo o ID do objeto (Os ID's da planilha e do banco são diferentes)
             client_data.pop('id')
 
-            logger.debug('Client: %s\n\tDB data: %s\n\tReal data: %s' % (
+            self.logger.debug('Client: %s\n\tDB data: %s\n\tReal data: %s' % (
                 client_data[DatabaseField.CNPJ],
                 db_data,
                 client_data
@@ -204,7 +204,7 @@ class Database:
             diff = DeepDiff(db_data, client_data)
             return diff
         except mysql.errors.ProgrammingError as error:
-            logger.error("Something went wrong on compare_owner_info function.\n\tDetails: %s" % error.msg)
+            self.logger.error("Something went wrong on compare_owner_info function.\n\tDetails: %s" % error.msg)
             return False
 
     def update_owner(self, cnpj, diffs):
@@ -232,7 +232,7 @@ class Database:
 
             obj_to_insert[key] = value
 
-        logger.info('Info to update on client %s:\n\t%s' % (cnpj, obj_to_insert))
+        self.logger.info('Info to update on client %s:\n\t%s' % (cnpj, obj_to_insert))
 
         query = ('call atualizar_proprietario('
                  '%(' + DatabaseField.CNPJ + ')s, '
@@ -257,9 +257,8 @@ class Database:
 
             db.close()
 
-            logger.info('Owner %s updated' % cnpj)
+            self.logger.info('Owner %s updated' % cnpj)
             return result['@resultado'] >= 1
         except mysql.errors.ProgrammingError as error:
-            print(cursor.statement)
-            logger.error("Something went wrong on update_owner function.\n\tDetails: %s" % error.msg)
+            self.logger.error("Something went wrong on update_owner function.\n\tDetails: %s" % error.msg)
             return False
