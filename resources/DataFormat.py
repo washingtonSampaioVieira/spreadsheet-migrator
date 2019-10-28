@@ -7,13 +7,14 @@ class DataFormat:
 
     def format_db(self, data):
         formatted_obj = {}
+        if data is None:
+            return None
 
         for value in self.custom_format.items():
             key = value[0]
             data_properties = value[1]
             format_function = data_properties[1]
 
-            # TODO: Tratar caso em que o proprietário tem mais de um número de telefone ou email
             data_value = data[key]
             formatted_data = format_function(data_value)
 

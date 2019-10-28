@@ -3,16 +3,18 @@ from . import Logger
 
 
 class ExcelReader:
-    def __init__(self, filename, options=None):
+    def __init__(self, file_path, options=None):
         self.logger = Logger.create_logger('ExcelReader', 'excelreader.log')
 
         default_options = {'sheet_index': 0, 'skip_rows': 0, 'index_col': 0}
-        default_options.update(options)
 
-        self.logger.info('Opening file %s with options %s' % (filename, options))
+        if options is not None:
+            default_options.update(options)
+
+        self.logger.info('Opening file %s with options %s' % (file_path, options))
 
         self.file = pandas.read_excel(
-            filename,
+            file_path,
             sheet_name=default_options['sheet_index'],
             skiprows=default_options['skip_rows'],
             index_col=default_options['index_col']

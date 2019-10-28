@@ -86,10 +86,6 @@ class Database:
             self.logger.error("Something went wrong on insert_solicitation function.\n\tDetails: %s" % error.msg)
             return False
 
-        # TODO: Check if solicitation is already on database
-        # TODO: Insert solicitation
-        pass
-
     def get_owner_id(self, cnpj):
         db = self.connect()
 
@@ -163,7 +159,7 @@ class Database:
 
             db.commit()
 
-            query = 'select @erro'
+            query = 'select @erro limit 1'
             cursor.execute(query)
 
             result = cursor.fetchone()

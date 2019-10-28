@@ -2,8 +2,27 @@ from . import DataType
 from . import DatabaseField
 
 
+class Teste:
+    filepath = 'C:\\Users\\gabriel.navevaiko\\Desktop\\Usuarios.xlsx'
+
+    @property
+    def file_options(self):
+        return {
+            'sheet_index': 0,
+            'skip_rows': 0,
+            'index_col': 0
+        }
+
+    @property
+    def data_format(self):
+        return {
+            'name': ('Name', DataType.STR),
+            'email': ('Email', DataType.EMAIL)
+        }
+
+
 class ParabrisaSolicitation:
-    filepath = 'C:\\Users\\gabriel.navevaiko\\Desktop\\GNV\\pára-brisa\\Solicitações\\SOLICITAÇÃO 1.xlsx'
+    filepath = 'C:\\Users\\gabriel.navevaiko\\Desktop\\SOLICITAÇÃO.xlsm'
 
     @property
     def file_options(self):

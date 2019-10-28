@@ -1,7 +1,10 @@
 import re
 
+import pandas
+
+
 def DATA(value):
-    return value
+    return value.date()
 
 
 def INT(value):
@@ -27,7 +30,7 @@ def PHONE(value):
 
 def EMAIL(value):
     # Coletando apenas o primeiro email
-    if type(value) != float:
+    if type(value) != float and value is not None:
         return value.split(';')[0]
-
-    return value
+    else:
+        return ''

@@ -14,7 +14,7 @@ class Client:
         formatter = DataFormat(product_config.data_format)
 
         ex_reader = ExcelReader(product_config.filepath, product_config.file_options)
-        clients = ex_reader.read_file(formatter.format, limit=3)
+        clients = ex_reader.read_file(formatter.format)
 
         inserted_clients_count = 0
         total_clients = len(clients)
@@ -28,7 +28,7 @@ class Client:
                 self.logger.info('Owner %s exists, comparing info' % cnpj)
                 client_diff = db.compare_owner_info(client, formatter.format_db)
 
-                if client_diff == {}:
+                if client_diff == {} or 'values_changed' not in client_diff:
                     self.logger.info('Client %s already inserted' % cnpj)
                     inserted_clients_count += 1
                 else:
@@ -41,7 +41,7 @@ class Client:
 
                         diffs.append({'key': key, 'new_value': new_value})
 
-                    self.logger.debug('Updating client %s\n\tData:' % diffs)
+                    self.logger.debug('Updating client %s\n\tData: %s' % (cnpj, diffs))
                     sucess = db.update_owner(cnpj, diffs)
 
                     if sucess:
