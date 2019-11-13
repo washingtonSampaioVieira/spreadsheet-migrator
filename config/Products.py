@@ -3,7 +3,7 @@ from . import DatabaseField
 
 
 class Teste:
-    filepath = 'C:\\Users\\gabriel.navevaiko\\Desktop\\Usuarios.xlsx'
+    filepath = '/home/ubuntu/Área de Trabalho/Usuarios.xlsx'
 
     @property
     def file_options(self):
@@ -22,7 +22,7 @@ class Teste:
 
 
 class ParabrisaSolicitation:
-    filepath = 'C:\\Users\\gabriel.navevaiko\\Desktop\\SOLICITAÇÃO.xlsm'
+    filepath = '/home/ubuntu/SOLICITAÇÃO.xlsm'
 
     @property
     def file_options(self):

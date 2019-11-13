@@ -16,7 +16,7 @@ def create_logger(logger_name, file_name):
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 
-    logger.setLevel(logging.INFO if os.getenv('LOGGER_LEVEL') else logging.DEBUG)
+    logger.setLevel(logging.INFO if os.getenv('DEBUG') is not True else logging.DEBUG)
 
     logger.info('Initiating logger %s on file %s' % (logger_name, file_name))
 
