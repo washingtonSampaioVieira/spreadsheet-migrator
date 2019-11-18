@@ -54,9 +54,10 @@ planilha = ExcelReader(parabrisa.filepath, parabrisa.file_options)
 
 format_parabrisa = DataFormat(parabrisa.data_format)
 
-dados_formatados = planilha.read_file(format_parabrisa.format, 11)
+dados_formatados = planilha.read_file(format_parabrisa.format)
 
 file = File()
-file.writeFile(dados_formatados, DatabaseField.PARA_BRISA)
+
+file.compareArquivo(dados_formatados, DatabaseField.PARA_BRISA)
 
 # print(dados_formatados)

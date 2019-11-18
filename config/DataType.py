@@ -4,7 +4,10 @@ import pandas
 
 
 def DATA(value):
-    return value.date()
+    if type(value) != float:
+        return value.date()
+    else:
+        return None
 
 
 def INT(value):
