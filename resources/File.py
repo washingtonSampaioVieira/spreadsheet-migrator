@@ -2,6 +2,7 @@ from resources.Hash import MD5
 from deepdiff import DeepDiff
 import re
 import json
+# from resources import Database
 
 
 class File:
@@ -44,31 +45,44 @@ class File:
     def compareArquivo(self, dados, product):
 
         json_file_old = self.readFileOld(product)
+
         md5 = MD5()
         json_file_new = md5.encrypterAll(dados)
 
         changes = DeepDiff(json_file_old, json_file_new)
-        print(changes)
         changes_keys = changes.keys()
 
         if len(changes_keys) == 0:
-            print("Nada muda")
+            print("Nem uma modificação encontrada.")
             return
 
         if "iterable_item_added" in changes_keys:
             for key in changes['iterable_item_added']:
-                indice  = re.sub('[^0-9]', '', key)
-                print(f"Item modificado: {indice}")
-
-                print(dados[int(indice)])
-
-
-            print("Iten adicionado")
+                # removendo caracteres como letras
+                # o retono costuma ser: Root[12], sendo o 12 o indice do vetor ao qual é novo
+                indice = re.sub('[^0-9]', '', key)
+                #databases = Database()
+                #result_insert = databases.insert_solicitation(dados[int(indice)])
+                result_insert = 1
+                # adicionando ao arquivo mais um item
+                if(result_insert != 0):
+                    md5 = MD5()
+                    new_record = md5.encrypterOne(dados[int(indice)])
+                    self.adicionarAoArquivo(product, new_record)
+                    print("salvo novo registro no arquivo e adicionado no banco")
 
         if "values_changed" in changes_keys:
             print("Item modificado")
 
-        return "B"
+        return
+
+    def adicionarAoArquivo(self,product ,item):
+        with open(f'files/{product}.json', 'r+') as file:
+            lines = file.read()
+            all_content = json.loads(lines)
+            all_content.append(item[0])
+        with open(f'files/{product}.json', 'w') as file:
+            file.write(json.dumps(all_content))
 
     def compareObjects(self, data1, data2):
         print("comprar arquivos")
