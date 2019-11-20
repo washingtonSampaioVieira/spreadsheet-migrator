@@ -1,3 +1,4 @@
-watchdog
+deepdiff
 pandas
 python-dotenv
+mysql-connector-python

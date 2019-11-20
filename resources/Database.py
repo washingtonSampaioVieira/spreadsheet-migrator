@@ -47,6 +47,8 @@ class Database:
         except mysql.errors.ProgrammingError as error:
             self.logger.error("Something went wrong on solicitation_exists function.\n\tDetails: %s" % error.msg)
             return False
+    def update_solicitation(self, solicitation):
+        print("Atualizar dados")
 
     def insert_solicitation(self, solicitation):
         db = self.connect()
@@ -64,7 +66,7 @@ class Database:
         )
 
         self.logger.info('Inserting solicitation %s' % solicitation)
-
+        print(solicitation)
         try:
             cursor.execute(query, (
                 solicitation[DatabaseField.OWNER_ID],
