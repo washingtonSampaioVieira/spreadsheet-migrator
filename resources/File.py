@@ -1,3 +1,4 @@
+from config import DatabaseField
 from resources.Hash import MD5
 from deepdiff import DeepDiff
 from resources.Database import Database
@@ -5,44 +6,13 @@ import re
 import json
 
 
+def index_by_content(vector, item):
+    for record in vector:
+        if record[DatabaseField.ID] == record[DatabaseField.ID]:
+            return vector.index(record)
 
 
 class File:
-    def teste(self):
-        print("A")
-
-        # a = [{'id': 123, 'name': 'washington'},
-        #      {'id': 124, 'name': 'lucas'},
-        #      {'id': 125, 'name': 'jose'},
-        #      {'id': 125, 'name': 'marcos'},
-        #      {'id': 126, 'name': 'roberto'}]
-        # b = [{'id': 123, 'name': 'washington'},
-        #      {'id': 124, 'name': 'lucas'},
-        #      {'id': 125, 'name': 'jose'},
-        #      {'id': 125, 'name': 'marcos'},
-        #      {'id': 126, 'name': 'roberto'},
-        #      {'id': 127, 'name': 'washington'}]
-        # res = ddiff = DeepDiff(a, b)
-        #
-        # if len(res) == 0:
-        #     print("nada muda")
-        #
-        # if 'iterable_item_added' in res.keys():
-        #     print("Existe mudanças")
-        #
-        # if 'values_changed' in res.keys():
-        #     print("existe novos registros")
-
-        # with open() as new_file:
-        # new_file = open(f'files/{product}.json', 'a')
-        # json_dados = json.dumps(list_of_hash)
-        # print(json_dados)
-        # new_file.write(json_dados)
-        # print(file_old)
-        # print(new_file.__dir__())
-        # new_file.close()
-
-        return "A"
 
     def compare_file(self, data, product):
 
@@ -66,7 +36,6 @@ class File:
             for key in changes['iterable_item_added']:
 
                 index = int(re.sub('[^0-9]', '', key))
-                print(data[index])
                 result_insert = databases.insert_solicitation(data[index])
 
                 # add new request to file of product
@@ -81,27 +50,36 @@ class File:
         # -------
 
         if "values_changed" in changes_keys:
-
             for key in changes['values_changed']:
 
                 index = re.sub('[^0-9]', '', key)
                 databases = Database()
-                # result_insert = databases.update_solicitation(data[int(index)])
-                result_insert = 1
 
+                result_insert = databases.update_solicitation(data[int(index)])
+                print(result_insert)
                 # correcting file information
                 if result_insert != 0:
 
                     md5 = MD5()
                     new_record = md5.encrypterOne(data[int(index)])
+
                     self.update_request(product, new_record)
 
                     print("Update request to file")
         return
 
     def update_request(self, product, item):
+        with open(f'files/{product}.json', 'r') as file:
+            lines = file.read()
 
-        print("Updating to file...")
+            all_content = lines.split()
+
+        index = index_by_content(all_content, item)
+        all_content[index] = item
+
+        with open(f'files/{product}.json', 'w') as file:
+            file.write(str(all_content))
+
 
     def add_to_file(self, product, item):
         with open(f'files/{product}.json', 'r+') as file:

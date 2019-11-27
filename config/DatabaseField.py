@@ -18,6 +18,7 @@ FINAL_NUMBER = 'final_number'
 QUANTITY = 'quantity'
 ENTRY_DATE = 'entry_date'
 MODEL_ID = 'model_id'
+AUTORIZATION_ID = 'autorizacao_id'
 
 # PRODUTOS
 PARA_BRISA = "para_brisa"
