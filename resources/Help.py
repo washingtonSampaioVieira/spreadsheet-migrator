@@ -19,7 +19,7 @@ def init_parabrisa():
     planilha = ExcelReader(parabrisa.filepath, parabrisa.file_options)
 
     format_parabrisa = DataFormat(parabrisa.data_format)
-    data_format = planilha.read_file(format_parabrisa.format, 17)
+    data_format = planilha.read_file(format_parabrisa.format, 3)
 
     file = File()
 

@@ -14,8 +14,9 @@ class MD5:
     def encrypterOne(self, dado):
         dado_result = []
         text = self.formatStrig(dado)
+        print(text)
         text_hash = self.encrypter(text)
-        dado_result.append({DatabaseField.ID: dado[DatabaseField.ID], "hash": text_hash})
+        dado_result.append({DatabaseField.ID: dado[DatabaseField.ID], "hash": text_hash, "text_hash": text})
         return dado_result
 
     def encrypterAll(self, dados):
@@ -24,12 +25,12 @@ class MD5:
         for dado in dados:
             text = self.formatStrig(dado)
             text_hash = self.encrypter(text)
-            list_dados.append({DatabaseField.ID: dado[DatabaseField.ID], "hash": text_hash})
+            list_dados.append({DatabaseField.ID: dado[DatabaseField.ID], "hash": text_hash, "text_hash": text})
         return list_dados
 
     def formatStrig(self, dado):
         # formantando a string com um padrao de todos os dados em uma so linha
         string_format = "#"
         for key in dado.keys():
-            string_format += "-" + str(dado[key])
+            string_format = f"{string_format}-{str(dado[key])}"
         return string_format

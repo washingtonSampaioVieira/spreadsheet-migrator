@@ -60,7 +60,6 @@ class Database:
         )
 
         self.logger.info('Update solicitation %s' % solicitation)
-
         try:
             cursor.execute(query, (
                 solicitation[DatabaseField.INITIAL_NUMBER],
@@ -82,7 +81,6 @@ class Database:
 
     def insert_solicitation(self, solicitation):
         db = self.connect()
-
         if db is None:
             return False
 
@@ -115,6 +113,7 @@ class Database:
 
             return row_count != 0
         except mysql.errors.ProgrammingError as error:
+            print(error)
             self.logger.error("Something went wrong on insert_solicitation function.\n\tDetails: %s" % error.msg)
             return False
 

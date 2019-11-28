@@ -8,12 +8,12 @@ import json
 
 def index_by_content(vector, item):
     for record in vector:
-        if record[DatabaseField.ID] == record[DatabaseField.ID]:
+        record = json.loads(record)
+        if record[DatabaseField.ID] == item[DatabaseField.ID]:
             return vector.index(record)
 
 
 class File:
-
     def compare_file(self, data, product):
 
         json_file_old = self.read_file_old(product)
@@ -52,11 +52,12 @@ class File:
         if "values_changed" in changes_keys:
             for key in changes['values_changed']:
 
-                index = re.sub('[^0-9]', '', key)
+                index = int(re.sub('[^0-9]', '', key))
                 databases = Database()
 
-                result_insert = databases.update_solicitation(data[int(index)])
-                print(result_insert)
+                result_insert = databases.update_solicitation(data[index])
+
+                print(f"old {json_file_old[index]} --- new {json_file_new[index]}")
                 # correcting file information
                 if result_insert != 0:
 
@@ -73,7 +74,6 @@ class File:
             lines = file.read()
 
             all_content = lines.split()
-
         index = index_by_content(all_content, item)
         all_content[index] = item
 
