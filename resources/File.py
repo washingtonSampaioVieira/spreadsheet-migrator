@@ -18,7 +18,7 @@ class File:
 
         json_file_old = self.read_file_old(product)
         md5 = MD5()
-        json_file_new = md5.encrypterAll(data)
+        json_file_new = md5.encrypter_all(data)
 
         changes = self.compare_objects(json_file_old, json_file_new)
         changes_keys = changes.keys()
@@ -30,7 +30,7 @@ class File:
         # ------
 
         if "iterable_item_added" in changes_keys:
-
+            print("added values")
             databases = Database()
 
             for key in changes['iterable_item_added']:
@@ -42,7 +42,7 @@ class File:
                 if result_insert != 0:
 
                     md5 = MD5()
-                    new_record = md5.encrypterOne(data[index])
+                    new_record = md5.encrypter_one(data[index])
                     self.add_to_file(product, new_record)
 
                     print("Save new request in file")
@@ -50,35 +50,38 @@ class File:
         # -------
 
         if "values_changed" in changes_keys:
+            print("modified values")
             for key in changes['values_changed']:
 
                 index = int(re.sub('[^0-9]', '', key))
+
                 databases = Database()
 
                 result_insert = databases.update_solicitation(data[index])
 
-                print(f"old {json_file_old[index]} --- new {json_file_new[index]}")
                 # correcting file information
                 if result_insert != 0:
 
-                    md5 = MD5()
-                    new_record = md5.encrypterOne(data[int(index)])
+                    print(f"old {json_file_old[index]} --- new {json_file_new[index]}")
 
-                    self.update_request(product, new_record)
+                    md5 = MD5()
+                    new_record = md5.encrypter_one(data[index])
+                    self.update_request(product, new_record, json_file_old[index])
 
                     print("Update request to file")
         return
 
-    def update_request(self, product, item):
+    def update_request(self, product, item, item_old):
         with open(f'files/{product}.json', 'r') as file:
             lines = file.read()
 
-            all_content = lines.split()
-        index = index_by_content(all_content, item)
+            all_content = json.loads(lines)
+            index = all_content.index(item_old)
+
         all_content[index] = item
 
         with open(f'files/{product}.json', 'w') as file:
-            file.write(str(all_content))
+            file.write(json.dumps(all_content))
 
 
     def add_to_file(self, product, item):
@@ -86,7 +89,7 @@ class File:
             lines = file.read()
 
             all_content = json.loads(lines)
-            all_content.append(item[0])
+            all_content.append(item)
 
         with open(f'files/{product}.json', 'w') as file:
             file.write(json.dumps(all_content))

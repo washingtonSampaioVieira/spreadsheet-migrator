@@ -54,27 +54,41 @@ class Database:
             return False
 
         cursor = db.cursor()
+
         query = (
             'update tbl_autorizacao set numero_serie_inicial = %s, numero_serie_final = %s, qtde = %s, '
-            'data_entrada = %s, modelo_id = %s where autorizacao_id = %s; '
+            'data_entrada = %s, modelo_id = %s where cod_autorizacao = %s and modelo_id = s% ; '
         )
 
+
         self.logger.info('Update solicitation %s' % solicitation)
+
         try:
+
+            print(f"{solicitation[DatabaseField.INITIAL_NUMBER]}  numero inicial")
+            print(f"{solicitation[DatabaseField.FINAL_NUMBER]}  numero final")
+            print(f"{solicitation[DatabaseField.QUANTITY]}  quantidade")
+            print(f"{solicitation[DatabaseField.ENTRY_DATE]}  data de entrada")
+            print(f"{solicitation[DatabaseField.MODEL_ID]}  modelo id")
+            print(f"{solicitation[DatabaseField.ID]}  solicitacao")
+            print(f"{solicitation[DatabaseField.MODEL_ID]}  modelo id")
+
             cursor.execute(query, (
                 solicitation[DatabaseField.INITIAL_NUMBER],
                 solicitation[DatabaseField.FINAL_NUMBER],
                 solicitation[DatabaseField.QUANTITY],
                 solicitation[DatabaseField.ENTRY_DATE],
                 solicitation[DatabaseField.MODEL_ID],
-                solicitation[DatabaseField.ID]
+                solicitation[DatabaseField.ID],
+                solicitation[DatabaseField.MODEL_ID]
             ))
+
             db.commit()
 
             row_count = cursor.rowcount
             db.close()
+            return True
 
-            return row_count != 0
         except mysql.errors.ProgrammingError as error:
             self.logger.error("Something went wrong on update_solicitation function.\n\tDetails: %s" % error.msg)
             return False
@@ -83,6 +97,13 @@ class Database:
         db = self.connect()
         if db is None:
             return False
+
+        # solicitation already exists
+        if self.solicitation_exists(solicitation[DatabaseField.ID], solicitation[DatabaseField.MODEL_ID]) is not False:
+            # arrumar aqui:
+            # pode só não inserir ou atualizar
+            print("Solicitação ja existente")
+            return True
 
         solicitation[DatabaseField.OWNER_ID] = self.get_owner_id(solicitation[DatabaseField.CNPJ])
 
@@ -129,7 +150,7 @@ class Database:
         query = 'select proprietario_id from tbl_proprietario where cnpj = %s limit 1'
 
         try:
-            cursor.execute(query, (cnpj, ))
+            cursor.execute(query, (cnpj,))
 
             if cursor.rowcount == 0:
                 return owner_id
@@ -263,14 +284,14 @@ class Database:
 
         query = ('call atualizar_proprietario('
                  '%(' + DatabaseField.CNPJ + ')s, '
-                 '%(' + DatabaseField.NAME + ')s,'
-                 '%(' + DatabaseField.ADDRESS + ')s, '
-                 '%(' + DatabaseField.CEP + ')s, '
-                 '%(' + DatabaseField.CITY + ')s, '
-                 '%(' + DatabaseField.COMPANY_MANAGER + ')s,'
-                 '%(' + DatabaseField.PHONE + ')s, '
-                 '%(' + DatabaseField.EMAIL + ')s,'
-                 '@resultado)')
+                                             '%(' + DatabaseField.NAME + ')s,'
+                                                                         '%(' + DatabaseField.ADDRESS + ')s, '
+                                                                                                        '%(' + DatabaseField.CEP + ')s, '
+                                                                                                                                   '%(' + DatabaseField.CITY + ')s, '
+                                                                                                                                                               '%(' + DatabaseField.COMPANY_MANAGER + ')s,'
+                                                                                                                                                                                                      '%(' + DatabaseField.PHONE + ')s, '
+                                                                                                                                                                                                                                   '%(' + DatabaseField.EMAIL + ')s,'
+                                                                                                                                                                                                                                                                '@resultado)')
 
         try:
             cursor.execute(query, obj_to_insert)
