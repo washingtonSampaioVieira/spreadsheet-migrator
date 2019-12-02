@@ -4,7 +4,7 @@ from deepdiff import DeepDiff
 from resources.Database import Database
 import re
 import json
-
+import os.path
 
 def index_by_content(vector, item):
     for record in vector:
@@ -29,15 +29,24 @@ class File:
 
         # ------
 
+
+
         if "iterable_item_added" in changes_keys:
             print("added values")
             databases = Database()
 
             for key in changes['iterable_item_added']:
-
                 index = int(re.sub('[^0-9]', '', key))
-                result_insert = databases.insert_solicitation(data[index])
 
+
+
+                # chamar metodo de acordo com o produto
+                databases.(product)('sss', 'aaa')
+
+
+
+
+                result_insert = databases.insert_solicitation(data[index])
                 # add new request to file of product
                 if result_insert != 0:
 
@@ -51,25 +60,25 @@ class File:
 
         if "values_changed" in changes_keys:
             print("modified values")
-            for key in changes['values_changed']:
-
-                index = int(re.sub('[^0-9]', '', key))
-
-                databases = Database()
-
-                result_insert = databases.update_solicitation(data[index])
-
-                # correcting file information
-                if result_insert != 0:
-
-                    print(f"old {json_file_old[index]} --- new {json_file_new[index]}")
-
-                    md5 = MD5()
-                    new_record = md5.encrypter_one(data[index])
-                    self.update_request(product, new_record, json_file_old[index])
-
-                    print("Update request to file")
-        return
+            # for key in changes['values_changed']:
+            #
+            #     index = int(re.sub('[^0-9]', '', key))
+            #
+            #     databases = Database()
+            #
+            #     result_insert = databases.update_solicitation(data[index])
+            #
+            #     correcting file information
+                # if result_insert != 0:
+                #
+                #     print(f"old {json_file_old[index]} --- new {json_file_new[index]}")
+                #
+                #     md5 = MD5()
+                #     new_record = md5.encrypter_one(data[index])
+                #     self.update_request(product, new_record, json_file_old[index])
+                #
+                #     print("Update request to file")
+        # return
 
     def update_request(self, product, item, item_old):
         with open(f'files/{product}.json', 'r') as file:
@@ -98,7 +107,12 @@ class File:
         return DeepDiff(data1, data2)
 
     def read_file_old(self, product):
+        if os.path.exists(f"files/{product}.json") is not True:
+            with open(f'files/{product}.json', 'x') as file:
+                file.write("[]")
+
         with open(f'files/{product}.json', 'r') as old_file:
+            print(product)
             str_file = old_file.read()
             json_file = json.loads(str_file)
 

@@ -57,14 +57,12 @@ class Database:
 
         query = (
             'update tbl_autorizacao set numero_serie_inicial = %s, numero_serie_final = %s, qtde = %s, '
-            'data_entrada = %s, modelo_id = %s where cod_autorizacao = %s and modelo_id = s% ; '
+            'data_entrada = %s, modelo_id = %s where cod_autorizacao = %s and modelo_id = s%'
         )
-
 
         self.logger.info('Update solicitation %s' % solicitation)
 
         try:
-
             print(f"{solicitation[DatabaseField.INITIAL_NUMBER]}  numero inicial")
             print(f"{solicitation[DatabaseField.FINAL_NUMBER]}  numero final")
             print(f"{solicitation[DatabaseField.QUANTITY]}  quantidade")

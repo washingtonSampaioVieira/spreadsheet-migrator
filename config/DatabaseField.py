@@ -22,3 +22,5 @@ AUTORIZATION_ID = 'autorizacao_id'
 
 # PRODUTOS
 PARA_BRISA = "para_brisa"
+CONSUMER = "clientes"
+
