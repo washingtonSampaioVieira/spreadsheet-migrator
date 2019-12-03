@@ -2,6 +2,8 @@ import os
 from dotenv import load_dotenv
 from deepdiff import DeepDiff
 import mysql.connector as mysql
+from config.Products import ParabrisaSolicitation
+from config.DataType import INT
 
 from . import Logger
 from config import DatabaseField
@@ -92,16 +94,16 @@ class Database:
             return False
 
     def insert_solicitation(self, solicitation):
-        db = self.connect()
-        if db is None:
-            return False
 
         # solicitation already exists
-        if self.solicitation_exists(solicitation[DatabaseField.ID], solicitation[DatabaseField.MODEL_ID]) is not False:
-            # arrumar aqui:
-            # pode só não inserir ou atualizar
+        if self.solicitation_exists(solicitation[DatabaseField.ID], ParabrisaSolicitation.get_model_id(solicitation, INT)) is not False:
             print("Solicitação ja existente")
             return True
+
+        db = self.connect()
+
+        if db is None:
+            return False
 
         solicitation[DatabaseField.OWNER_ID] = self.get_owner_id(solicitation[DatabaseField.CNPJ])
 
@@ -186,6 +188,10 @@ class Database:
             return False
 
     def insert_owner(self, client_data):
+        if self.owner_exists(client_data[DatabaseField.CNPJ]):
+            print("Customer already registered")
+            return True
+
         db = self.connect()
 
         if db is None:
@@ -308,3 +314,12 @@ class Database:
         except mysql.errors.ProgrammingError as error:
             self.logger.error("Something went wrong on update_owner function.\n\tDetails: %s" % error.msg)
             return False
+
+    def insert(self, data):
+        if DatabaseField.ENTRY_DATE in data.keys():
+            self.insert_solicitation(data)
+
+        elif DatabaseField.NAME in data.keys():
+            self.insert_owner(data)
+
+        return

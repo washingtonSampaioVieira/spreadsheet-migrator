@@ -47,6 +47,10 @@ class ParabrisaSolicitation:
     def get_model_id(data, treatment_function):
         return treatment_function(5)
 
+    @property
+    def get_name_plan(self):
+        return DatabaseField.PARA_BRISA
+
 
 class ParabrisaClient:
     filepath = '/home/ubuntu/C.CLIENTES.xls'
@@ -83,3 +87,7 @@ class ParabrisaClient:
 
         phones_str_list = ';'.join(formatted_phone_list)
         return phones_str_list
+
+    @property
+    def get_name_plan(self):
+        return DatabaseField.CONSUMER
