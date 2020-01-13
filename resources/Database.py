@@ -223,6 +223,7 @@ class Database:
             db.close()
 
             self.logger.info('Owner %s inserted' % client_data[DatabaseField.CNPJ])
+            print(client_data)
             return result['@erro'] == 'Cadastrado'
         except mysql.errors.ProgrammingError and mysql.errors.IntegrityError as error:
             self.logger.error("Something went wrong on insert_client function.\n\tDetails: %s" % error.msg)

@@ -22,6 +22,7 @@ class ExcelReader:
 
     def read_file(self, format_function, limit=None):
         # Limitando o número de linhas lidas de acordo com parametro do usuário
+
         file = self.file.head(limit)
         # Converte o arquivo para um objeto no formato (linha = [colunas])
         obj_dict = file.to_dict(orient='index')

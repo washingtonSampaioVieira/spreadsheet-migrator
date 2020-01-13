@@ -5,7 +5,7 @@ import pandas
 
 def DATA(value):
     if type(value) != float:
-        return value.date()
+        return value
     else:
         return None
 
@@ -25,8 +25,8 @@ def STR(value):
 
 
 def PHONE(value):
-    if value is not None and type(value) != float:
-        value = re.sub(r'[\(\)\-" "]', '', value)
+    # if value is not None and type(value) != float:
+    #     value = re.sub(r'[\(\)\-" "]', '', value)
 
     return value
 
