@@ -2,27 +2,8 @@ from . import DataType
 from . import DatabaseField
 
 
-class Teste:
-    filepath = '/home/ubuntu/Usuarios.xlsx'
-
-    @property
-    def file_options(self):
-        return {
-            'sheet_index': 0,
-            'skip_rows': 0,
-            'index_col': 0
-        }
-
-    @property
-    def data_format(self):
-        return {
-            'name': ('Name', DataType.STR),
-            'email': ('Email', DataType.EMAIL)
-        }
-
-
 class ParabrisaSolicitation:
-    filepath = '/home/ubuntu/SOLICITAÇÂO.xlsx'
+    filepath = '/home/ubuntu/wash.xlsm'
 
     @property
     def file_options(self):
@@ -90,7 +71,8 @@ class ParabrisaClient:
 
     @property
     def get_name_plan(self):
-        return DatabaseField.CONSUMER
+        return DatabaseField.CONSUMER_PARA_BRISA
+
 
 class CIPPClient:
     filepath = '/home/ubuntu/Cadastro.de.Clientes.xlsx'
@@ -122,12 +104,39 @@ class CIPPClient:
 
         for phone_key in ['TELEFONE1']:
             value = data[phone_key]
-            # if type(value) != float:
-            #     formatted_phone_list.append(treatment_function(value))
-
-        # phones_str_list = ';'.join(formatted_phone_list)
-        return value
+            return value
 
     @property
     def get_name_plan(self):
-        return DatabaseField.CONSUMER
+        return DatabaseField.CONSUMER_CIPP
+
+
+class CIPPSolicitation:
+    filepath = '/home/ubuntu/solicitacao_cipp_valores.xlsx'
+
+    @property
+    def file_options(self):
+        return {
+            'sheet_index': 0,
+            'skip_rows': 0,
+            'index_col': 0
+        }
+
+    @property
+    def data_format(self):
+        return {
+            DatabaseField.ENTRY_DATE: ('DATA SOLICITAÇÃO', DataType.DATA),
+            DatabaseField.INITIAL_NUMBER: ('Nº Inicial', DataType.INT),
+            DatabaseField.FINAL_NUMBER: ('Nº Final', DataType.INT),
+            DatabaseField.CNPJ: ('CNPJ', DataType.STR),
+            DatabaseField.QUANTITY: ('QTD', DataType.INT),
+            DatabaseField.MODEL_ID: (self.get_model_id, DataType.INT)
+        }
+
+    @staticmethod
+    def get_model_id(data, treatment_function):
+        return treatment_function(8)
+
+    @property
+    def get_name_plan(self):
+        return DatabaseField.CIPP_SOLICITATION

@@ -21,6 +21,8 @@ MODEL_ID = 'model_id'
 AUTORIZATION_ID = 'autorizacao_id'
 
 # PRODUTOS
-PARA_BRISA = "para_brisa"
-CONSUMER = "clientes"
+PARA_BRISA = "solicitacao_para_brisa"
+CONSUMER_CIPP = "clientes_cipp"
+CONSUMER_PARA_BRISA = "clientes_cipp"
+CIPP_SOLICITATION = "solicitacao_cipp"
 

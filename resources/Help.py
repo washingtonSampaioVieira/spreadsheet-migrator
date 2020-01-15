@@ -1,10 +1,9 @@
 from datetime import datetime
 from resources.ExcelReader import ExcelReader
 from config import DatabaseField
-from config.Products import ParabrisaSolicitation, CIPPClient, ParabrisaClient
+from config.Products import *
 from resources.File import File
 from resources.DataFormat import DataFormat
-
 
 
 def date_now():
@@ -25,7 +24,8 @@ def get_data_format(obj):
 def init_parabrisa():
     print(f"backup start {DatabaseField.PARA_BRISA} at - {date_now()}")
 
-    windshields = [ParabrisaSolicitation(), CIPPClient()]
+    windshields = [CIPPSolicitation()]
+    # windshields = [CIPPClient()]
 
     file = File()
 
