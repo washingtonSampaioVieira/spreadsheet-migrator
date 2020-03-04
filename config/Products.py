@@ -112,7 +112,7 @@ class CIPPClient:
 
 
 class CIPPSolicitation:
-    filepath = '/home/ubuntu/Solicitação cliente.xls'
+    filepath = '/run/user/1000/gvfs/smb-share:server=192.168.1.233,share=stor%201/Atendimento/Arquivos 17-18-19/BANCO DE DADOS/PRODUTOS PRIMI/SELOS DIVERSOS INMETRO/CIPP/Obsoleto/Solicitação cliente.xls'
 
     @property
     def file_options(self):

@@ -91,8 +91,12 @@ class File:
                     print(f"Save new request in file order {data[index][DatabaseField.ID]}  client {data[index][DatabaseField.CNPJ]} :) \n")
                     self.logger.info(f"Save new request in file order {data[index][DatabaseField.ID]}  client {data[index][DatabaseField.CNPJ]} :) \n")
                 else:
+                    md5 = MD5()
+                    new_record = md5.encrypter_one(data[index])
+                    add_to_file(product, new_record)
                     print(f"Not saved to log file order {data[index][DatabaseField.ID]} client {data[index][DatabaseField.CNPJ]} :( \n")
                     self.logger.info(f"Not saved to log file order {data[index][DatabaseField.ID]} client {data[index][DatabaseField.CNPJ]} :( \n")
+
         
         if "values_changed" in changes_keys:
             for key in changes['values_changed']:
@@ -109,12 +113,17 @@ class File:
                     new_record = md5.encrypter_one(data[index])
 
                     update_request(product, new_record, json_file_old[index])
+
                     print(f"old {data[index]} --- new {json_file_new[index]}")
-                    print(f"Update request to file order {data[index][DatabaseField.ID]}  client {data[index][DatabaseField.CNPJ]} \n")
-                    self.logger.info(f"Update request to file order {data[index][DatabaseField.ID]}  client {data[index][DatabaseField.CNPJ]} \n")
+                    print(f"Inserido no banco e no arquivo {data[index][DatabaseField.ID]}  client {data[index][DatabaseField.CNPJ]} \n")
+                    self.logger.info(f"Inserido no banco e no arquivo {data[index][DatabaseField.ID]}  client {data[index][DatabaseField.CNPJ]} \n")
 
                 else:
-                    print(f"Not updated request to file order {data[index][DatabaseField.ID]} client {data[index][DatabaseField.CNPJ]} \n")
-                    self.logger.info(f"Not updated request to file order {data[index][DatabaseField.ID]} client {data[index][DatabaseField.CNPJ]} \n")
+                    d5 = MD5()
+                    new_record = md5.encrypter_one(data[index])
+
+                    update_request(product, new_record, json_file_old[index])
+                    print(f"Inserido no arquivo e nao inserido no banco {data[index][DatabaseField.ID]} client {data[index][DatabaseField.CNPJ]} \n")
+                    self.logger.info(f"Inserido no arquivo e nao inserido no banco {data[index][DatabaseField.ID]} client {data[index][DatabaseField.CNPJ]} \n")
             return
 
