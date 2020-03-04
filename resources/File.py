@@ -1,4 +1,5 @@
 from config import DatabaseField
+from resources import Logger
 from resources.Hash import MD5
 from deepdiff import DeepDiff
 from resources.Database import Database
@@ -56,6 +57,10 @@ def read_file_old(product):
 
 
 class File:
+
+    def __init__(self):
+        self.logger = Logger.create_logger('Database', 'database.log')
+
     def compare_file(self, data, product):
 
         json_file_old = read_file_old(product)
@@ -78,32 +83,38 @@ class File:
 
                 result_insert = databases.insert(data[index])
 
-                if result_insert != 0:
+                if result_insert:
                     md5 = MD5()
                     new_record = md5.encrypter_one(data[index])
                     add_to_file(product, new_record)
 
-                    print("Save new request in file")
+                    print(f"Save new request in file order {data[index][DatabaseField.ID]}  client {data[index][DatabaseField.CNPJ]} :) \n")
+                    self.logger.info(f"Save new request in file order {data[index][DatabaseField.ID]}  client {data[index][DatabaseField.CNPJ]} :) \n")
+                else:
+                    print(f"Not saved to log file order {data[index][DatabaseField.ID]} client {data[index][DatabaseField.CNPJ]} :( \n")
+                    self.logger.info(f"Not saved to log file order {data[index][DatabaseField.ID]} client {data[index][DatabaseField.CNPJ]} :( \n")
         
         if "values_changed" in changes_keys:
-            print("modified values")
-            # for key in changes['values_changed']:
-            #
-            #     index = int(re.sub('[^0-9]', '', key))
-            #
-            #     databases = Database()
-            #
-            #     result_insert = databases.update_solicitation(data[index])
-            #
-            #     correcting file information
-            # if result_insert != 0:
-            #
-            #     print(f"old {json_file_old[index]} --- new {json_file_new[index]}")
-            #
-            #     md5 = MD5()
-            #     new_record = md5.encrypter_one(data[index])
-            #     self.update_request(product, new_record, json_file_old[index])
-            #
-            #     print("Update request to file")
-            # return
+            for key in changes['values_changed']:
+
+                index = int(re.sub('[^0-9]', '', key))
+
+                databases = Database()
+
+                result_update = databases.update_status_solicitation(data[index])
+
+                # correcting file information
+                if result_update:
+                    d5 = MD5()
+                    new_record = md5.encrypter_one(data[index])
+
+                    update_request(product, new_record, json_file_old[index])
+                    print(f"old {data[index]} --- new {json_file_new[index]}")
+                    print(f"Update request to file order {data[index][DatabaseField.ID]}  client {data[index][DatabaseField.CNPJ]} \n")
+                    self.logger.info(f"Update request to file order {data[index][DatabaseField.ID]}  client {data[index][DatabaseField.CNPJ]} \n")
+
+                else:
+                    print(f"Not updated request to file order {data[index][DatabaseField.ID]} client {data[index][DatabaseField.CNPJ]} \n")
+                    self.logger.info(f"Not updated request to file order {data[index][DatabaseField.ID]} client {data[index][DatabaseField.CNPJ]} \n")
+            return
 

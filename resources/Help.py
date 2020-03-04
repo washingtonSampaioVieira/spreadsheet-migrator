@@ -25,7 +25,6 @@ def init_parabrisa():
     print(f"backup start {DatabaseField.PARA_BRISA} at - {date_now()}")
 
     windshields = [CIPPSolicitation()]
-    # windshields = [CIPPClient()]
 
     file = File()
 

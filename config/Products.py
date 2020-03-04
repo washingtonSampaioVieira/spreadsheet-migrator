@@ -112,7 +112,7 @@ class CIPPClient:
 
 
 class CIPPSolicitation:
-    filepath = '/home/ubuntu/solicitacao_cipp_valores.xlsx'
+    filepath = '/home/ubuntu/Solicitação cliente.xls'
 
     @property
     def file_options(self):
@@ -130,12 +130,16 @@ class CIPPSolicitation:
             DatabaseField.FINAL_NUMBER: ('Nº Final', DataType.INT),
             DatabaseField.CNPJ: ('CNPJ', DataType.STR),
             DatabaseField.QUANTITY: ('QTD', DataType.INT),
-            DatabaseField.MODEL_ID: (self.get_model_id, DataType.INT)
+            DatabaseField.MODEL_ID: (self.get_model_id, DataType.STR),
+            DatabaseField.STATUS_SOLIC: ('STATUS.SOLIC', DataType.STR),
+            DatabaseField.COD_RASTREIO: ('COD.RASTREIO', DataType.STR)
+
+
         }
 
     @staticmethod
     def get_model_id(data, treatment_function):
-        return treatment_function(8)
+        return treatment_function(DatabaseField.CIPP_ID)
 
     @property
     def get_name_plan(self):

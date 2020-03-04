@@ -6,7 +6,7 @@ try:
     while True:
         init_parabrisa()
         print("\n----------------------------------\n")
-        time.sleep(30)
+        time.sleep(8.64e+7)
 
 except KeyboardInterrupt:
     print('Stoping observer')

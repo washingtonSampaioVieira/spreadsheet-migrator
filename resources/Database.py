@@ -1,9 +1,7 @@
 import os
 from dotenv import load_dotenv
-from deepdiff import DeepDiff
 import mysql.connector as mysql
-from config.Products import ParabrisaSolicitation
-from config.DataType import INT
+
 
 from . import Logger
 from config import DatabaseField
@@ -37,66 +35,155 @@ class Database:
             return False
 
         cursor = db.cursor(dictionary=True, buffered=True)
-        query = 'select cod_autorizacao from tbl_autorizacao  where cod_autorizacao = %s and modelo_id = %s'
+        query = 'select id_order from tb_order  where order_code = %s and id_product = %s limit 1'
 
         try:
             cursor.execute(query, (solicitation_code, model_id))
-
+            result = cursor.fetchone()
             row_count = cursor.rowcount
             db.close()
-
-            return row_count != 0
+            if result is not None:
+                return result['id_order']
+            else:
+                return False
         except mysql.errors.ProgrammingError as error:
             self.logger.error("Something went wrong on solicitation_exists function.\n\tDetails: %s" % error.msg)
             return False
 
-    def update_solicitation(self, solicitation):
+    def get_status_order(self, status):
+        query = (f'select id_order_status from tb_order_status where status = "{status}" limit 1 ')
         db = self.connect()
+
         if db is None:
             return False
 
         cursor = db.cursor()
+        try:
+            cursor.execute(query)
+
+            row_count = cursor.rowcount
+            result = cursor.fetchone()
+            id_order_status = result[0]
+
+            return id_order_status
+        except mysql.errors.ProgrammingError as error:
+            print(error)
+            self.logger.error("Something went wrong on select tb_order_status function.\n\tDetails: %s" % error.msg)
+            return False
+
+    def update_finished_status(self, id_order):
+        db = self.connect()
+        if db is None:
+            return False
 
         query = (
-            'update tbl_autorizacao set numero_serie_inicial = %s, numero_serie_final = %s, qtde = %s, '
-            'data_entrada = %s, modelo_id = %s where cod_autorizacao = %s and modelo_id = s%'
+            f'UPDATE `tb_rel_order_status` SET `finished_at` = NOW() WHERE `id_order` = "{id_order}" and '
+            '`finished_at` is null'
+        )
+        cursor = db.cursor()
+        try:
+            cursor.execute(query)
+
+            db.commit()
+            row_count = cursor.rowcount
+            db.close()
+            return row_count != 0
+        except mysql.errors.ProgrammingError as error:
+            self.logger.error("Something went wrong on update_ function.\n\tDetails: %s" % error.msg)
+            return False
+        return True
+
+    def update_status_solicitation(self, solicitation):
+        db = self.connect()
+        if db is None:
+            return False
+        id_system_user = self.get_user_from_client_cnpj(solicitation[DatabaseField.CNPJ])
+
+        id_status_order = self.get_status_order(solicitation[DatabaseField.STATUS_SOLIC])
+
+        id_order = self.solicitation_exists(solicitation[DatabaseField.ID], DatabaseField.CIPP_ID)
+
+        if id_system_user and id_status_order and id_order:
+            self.update_finished_status(id_order)
+        else:
+            print("unregistered client")
+            self.logger.info("Unregistered client")
+            return False
+
+        query = (
+            'INSERT INTO `tb_rel_order_status`'
+            '(`id_order_status`, `id_status_order`, `id_system_user`, `id_order`, `created_at`, `updated_at`, '
+            '`finished_at`) '
+            f'VALUES (UUID(), "{id_status_order}", "{DatabaseField.ID_SYSTEM_USER}", "{id_order}", NOW(), NOW(), NULL)'
         )
 
-        self.logger.info('Update solicitation %s' % solicitation)
-
+        self.logger.info('Create new status solicitaion%s' % solicitation)
+        cursor = db.cursor()
         try:
-            print(f"{solicitation[DatabaseField.INITIAL_NUMBER]}  numero inicial")
-            print(f"{solicitation[DatabaseField.FINAL_NUMBER]}  numero final")
-            print(f"{solicitation[DatabaseField.QUANTITY]}  quantidade")
-            print(f"{solicitation[DatabaseField.ENTRY_DATE]}  data de entrada")
-            print(f"{solicitation[DatabaseField.MODEL_ID]}  modelo id")
-            print(f"{solicitation[DatabaseField.ID]}  solicitacao")
-            print(f"{solicitation[DatabaseField.MODEL_ID]}  modelo id")
-
-            cursor.execute(query, (
-                solicitation[DatabaseField.INITIAL_NUMBER],
-                solicitation[DatabaseField.FINAL_NUMBER],
-                solicitation[DatabaseField.QUANTITY],
-                solicitation[DatabaseField.ENTRY_DATE],
-                solicitation[DatabaseField.MODEL_ID],
-                solicitation[DatabaseField.ID],
-                solicitation[DatabaseField.MODEL_ID]
-            ))
+            cursor.execute(query)
 
             db.commit()
 
             row_count = cursor.rowcount
             db.close()
-            return True
+            return row_count != 0
 
         except mysql.errors.ProgrammingError as error:
-            self.logger.error("Something went wrong on update_solicitation function.\n\tDetails: %s" % error.msg)
+            print(error)
+            self.logger.error("Something went wrong on update_status_solicitation function.\n\tDetails: %s" % error.msg)
+            return False
+
+    def get_user_from_client_id(self, id_client):
+        query = ('select id_client_user from tb_client_print_log as cl '
+                 f'inner join tb_client_user as u on u.id_client = cl.id_client  where cl.id_client_print_log = "{id_client}" limit 1 ')
+        db = self.connect()
+
+        if db is None:
+            return False
+
+        cursor = db.cursor()
+        try:
+            cursor.execute(query)
+
+            row_count = cursor.rowcount
+            result = cursor.fetchone()
+            id_client_user = result[0]
+
+            return id_client_user
+        except mysql.errors.ProgrammingError as error:
+            print(error)
+            self.logger.error("Something went wrong on get_user_from_client_id function.\n\tDetails: %s" % error.msg)
+            return False
+
+    def get_user_from_client_cnpj(self, cnpj):
+        query = ('select id_client_user from tb_client_print_log as cl '
+                 f'inner join tb_client_user as u on u.id_client = cl.id_client  where cl.cnpj = "{cnpj}" limit 1 ')
+        db = self.connect()
+
+        if db is None:
+            return False
+
+        cursor = db.cursor()
+        try:
+            cursor.execute(query)
+
+            result = cursor.fetchone()
+            if result != None:
+                id_client_user = result[0]
+                return id_client_user
+            else:
+                return False
+
+
+        except mysql.errors.ProgrammingError as error:
+            print(error)
+            self.logger.error("Something went wrong on get_user_from_client_cnpj function.\n\tDetails: %s" % error.msg)
             return False
 
     def insert_solicitation(self, solicitation):
 
         # solicitation already exists
-        if self.solicitation_exists(solicitation[DatabaseField.ID], ParabrisaSolicitation.get_model_id(solicitation, INT)) is not False:
+        if self.solicitation_exists(solicitation[DatabaseField.ID], DatabaseField.CIPP_ID) is not False:
             print("Solicitação ja existente")
             return True
 
@@ -107,26 +194,35 @@ class Database:
 
         solicitation[DatabaseField.OWNER_ID] = self.get_owner_id(solicitation[DatabaseField.CNPJ])
 
+        if solicitation[DatabaseField.OWNER_ID] == 0:
+            print(solicitation[DatabaseField.CNPJ])
+            print("Nem um propritario cadastrado com o CNPJ desta solicitação")
+            return False
+        solicitation[DatabaseField.CLIENT_USER] = self.get_user_from_client_id(solicitation[DatabaseField.OWNER_ID])
+
+        if solicitation[DatabaseField.CLIENT_USER] == 0:
+            print("Empresa não tem usuário cadastrado")
+            return False
+
         cursor = db.cursor()
         query = (
-            'insert into tbl_autorizacao(proprietario_id, cod_autorizacao, numero_serie_inicial, numero_serie_final, '
-            'qtde, data_entrada, modelo_id) '
-            'values(%s, %s, %s, %s, %s, %s, %s)'
+            'INSERT INTO `tb_order`(`id_order`, `id_client_user`, `id_product`, `id_delivery_type`, `id_log_client`, '
+            '`order_code`, `quantity`, `initial_number`, `final_number`, `created_at`, `updated_at`) '
+            'VALUES  (UUID(), %s, %s,  %s, %s, %s, %s, %s, %s, NOW(), NOW())'
         )
 
         self.logger.info('Inserting solicitation %s' % solicitation)
-        print(solicitation)
         try:
             cursor.execute(query, (
+                solicitation[DatabaseField.CLIENT_USER],
+                DatabaseField.CIPP_ID,
+                DatabaseField.DELIVERY_TYPE_WITHDRAWAL,
                 solicitation[DatabaseField.OWNER_ID],
                 solicitation[DatabaseField.ID],
+                solicitation[DatabaseField.QUANTITY],
                 solicitation[DatabaseField.INITIAL_NUMBER],
                 solicitation[DatabaseField.FINAL_NUMBER],
-                solicitation[DatabaseField.QUANTITY],
-                solicitation[DatabaseField.ENTRY_DATE],
-                solicitation[DatabaseField.MODEL_ID]
             ))
-
             db.commit()
 
             row_count = cursor.rowcount
@@ -135,7 +231,7 @@ class Database:
             return row_count != 0
         except mysql.errors.ProgrammingError as error:
             print(error)
-            self.logger.error("Something went wrong on insert_solicitation function.\n\tDetails: %s" % error.msg)
+            self.logger.error("Something went wrong on insert_solicitation function.\ntDetails: %s" % error.msg)
             return False
 
     def get_owner_id(self, cnpj):
@@ -147,7 +243,7 @@ class Database:
             return owner_id
 
         cursor = db.cursor(dictionary=True, buffered=True)
-        query = 'select proprietario_id from tbl_proprietario where cnpj = %s limit 1'
+        query = 'select id_client_print_log from tb_client_print_log where cnpj = %s limit 1'
 
         try:
             cursor.execute(query, (cnpj,))
@@ -158,7 +254,7 @@ class Database:
             self.logger.info('Fetching owner id from cnpj: %s' % cnpj)
 
             owner = cursor.fetchone()
-            owner_id = owner['proprietario_id']
+            owner_id = owner['id_client_print_log']
 
             db.close()
 
@@ -187,140 +283,9 @@ class Database:
             self.logger.error("Something went wrong on owner_exists function.\n\tDetails: %s" % error.msg)
             return False
 
-    def insert_owner(self, client_data):
-        if self.owner_exists(client_data[DatabaseField.CNPJ]):
-            print("Customer already registered")
-            return True
-
-        db = self.connect()
-
-        if db is None:
-            return False
-
-        cursor = db.cursor(dictionary=True)
-        query = 'call cadastro_proprietario(%s, %s, %s, %s, %s, %s, %s, %s, "", %s, @erro)'
-
-        try:
-            cursor.execute(query, (
-                client_data[DatabaseField.NAME],
-                client_data[DatabaseField.CNPJ],
-                client_data[DatabaseField.CITY],
-                client_data[DatabaseField.UF],
-                client_data[DatabaseField.ADDRESS],
-                client_data[DatabaseField.CEP],
-                client_data[DatabaseField.COMPANY_MANAGER],
-                client_data[DatabaseField.PHONE],
-                client_data[DatabaseField.EMAIL]
-            ))
-
-            db.commit()
-
-            query = 'select @erro limit 1'
-            cursor.execute(query)
-
-            result = cursor.fetchone()
-
-            db.close()
-
-            self.logger.info('Owner %s inserted' % client_data[DatabaseField.CNPJ])
-            print(client_data)
-            return result['@erro'] == 'Cadastrado'
-        except mysql.errors.ProgrammingError and mysql.errors.IntegrityError as error:
-            self.logger.error("Something went wrong on insert_client function.\n\tDetails: %s" % error.msg)
-            return False
-
-    def compare_owner_info(self, client_data, format_function):
-        db = self.connect()
-
-        if db is None:
-            return False
-
-        cursor = db.cursor(dictionary=True)
-        query = 'select * from vw_info_proprietario where cnpj = %s limit 1'
-
-        try:
-            cursor.execute(query, (client_data[DatabaseField.CNPJ],))
-
-            db_data = format_function(cursor.fetchone())
-
-            # Removendo o ID do objeto (Os ID's da planilha e do banco são diferentes)
-            client_data.pop('id')
-
-            self.logger.debug('Client: %s\n\tDB data: %s\n\tReal data: %s' % (
-                client_data[DatabaseField.CNPJ],
-                db_data,
-                client_data
-            ))
-
-            db.close()
-
-            diff = DeepDiff(db_data, client_data)
-            return diff
-        except mysql.errors.ProgrammingError as error:
-            self.logger.error("Something went wrong on compare_owner_info function.\n\tDetails: %s" % error.msg)
-            return False
-
-    def update_owner(self, cnpj, diffs):
-        db = self.connect()
-
-        if db is None:
-            return False
-
-        cursor = db.cursor(dictionary=True)
-
-        obj_to_insert = {
-            DatabaseField.CNPJ: cnpj,
-            DatabaseField.NAME: '',
-            DatabaseField.ADDRESS: '',
-            DatabaseField.CEP: '',
-            DatabaseField.CITY: '',
-            DatabaseField.COMPANY_MANAGER: '',
-            DatabaseField.PHONE: '',
-            DatabaseField.EMAIL: '',
-        }
-
-        for diff in diffs:
-            key = diff['key']
-            value = diff['new_value']
-
-            obj_to_insert[key] = value
-
-        self.logger.info('Info to update on client %s:\n\t%s' % (cnpj, obj_to_insert))
-
-        query = ('call atualizar_proprietario('
-                 '%(' + DatabaseField.CNPJ + ')s, '
-                                             '%(' + DatabaseField.NAME + ')s,'
-                                                                         '%(' + DatabaseField.ADDRESS + ')s, '
-                                                                                                        '%(' + DatabaseField.CEP + ')s, '
-                                                                                                                                   '%(' + DatabaseField.CITY + ')s, '
-                                                                                                                                                               '%(' + DatabaseField.COMPANY_MANAGER + ')s,'
-                                                                                                                                                                                                      '%(' + DatabaseField.PHONE + ')s, '
-                                                                                                                                                                                                                                   '%(' + DatabaseField.EMAIL + ')s,'
-                                                                                                                                                                                                                                                                '@resultado)')
-
-        try:
-            cursor.execute(query, obj_to_insert)
-
-            db.commit()
-
-            query = 'select @resultado'
-            cursor.execute(query)
-
-            result = cursor.fetchone()
-
-            db.close()
-
-            self.logger.info('Owner %s updated' % cnpj)
-            return result['@resultado'] >= 1
-        except mysql.errors.ProgrammingError as error:
-            self.logger.error("Something went wrong on update_owner function.\n\tDetails: %s" % error.msg)
-            return False
-
     def insert(self, data):
         if DatabaseField.ENTRY_DATE in data.keys():
-            self.insert_solicitation(data)
+            return self.insert_solicitation(data)
 
-        elif DatabaseField.NAME in data.keys():
-            self.insert_owner(data)
-
-        return
+        # elif DatabaseField.NAME in data.keys():
+        #     return self.insert_owner(data)
