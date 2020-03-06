@@ -83,21 +83,21 @@ class File:
 
                 result_insert = databases.insert(data[index])
 
+                md5 = MD5()
+                new_record = md5.encrypter_one(data[index])
+                add_to_file(product, new_record)
+
                 if result_insert:
-                    md5 = MD5()
-                    new_record = md5.encrypter_one(data[index])
-                    add_to_file(product, new_record)
-
-                    print(f"Save new request in file order {data[index][DatabaseField.ID]}  client {data[index][DatabaseField.CNPJ]} :) \n")
-                    self.logger.info(f"Save new request in file order {data[index][DatabaseField.ID]}  client {data[index][DatabaseField.CNPJ]} :) \n")
+                    print(
+                        f"Save new request in file order {data[index][DatabaseField.ID]}  client {data[index][DatabaseField.CNPJ]} :) \n")
+                    self.logger.info(
+                        f"Save new request in file order {data[index][DatabaseField.ID]}  client {data[index][DatabaseField.CNPJ]} :) \n")
                 else:
-                    md5 = MD5()
-                    new_record = md5.encrypter_one(data[index])
-                    add_to_file(product, new_record)
-                    print(f"Not saved to log file order {data[index][DatabaseField.ID]} client {data[index][DatabaseField.CNPJ]} :( \n")
-                    self.logger.info(f"Not saved to log file order {data[index][DatabaseField.ID]} client {data[index][DatabaseField.CNPJ]} :( \n")
+                    print(
+                        f"Not saved to log file order {data[index][DatabaseField.ID]} client {data[index][DatabaseField.CNPJ]} :( \n")
+                    self.logger.info(
+                        f"Not saved to log file order {data[index][DatabaseField.ID]} client {data[index][DatabaseField.CNPJ]} :( \n")
 
-        
         if "values_changed" in changes_keys:
             for key in changes['values_changed']:
 
@@ -108,22 +108,21 @@ class File:
                 result_update = databases.update_status_solicitation(data[index])
 
                 # correcting file information
+                d5 = MD5()
+                new_record = md5.encrypter_one(data[index])
+                update_request(product, new_record, json_file_old[index])
+
                 if result_update:
-                    d5 = MD5()
-                    new_record = md5.encrypter_one(data[index])
-
-                    update_request(product, new_record, json_file_old[index])
-
                     print(f"old {data[index]} --- new {json_file_new[index]}")
-                    print(f"Inserido no banco e no arquivo {data[index][DatabaseField.ID]}  client {data[index][DatabaseField.CNPJ]} \n")
-                    self.logger.info(f"Inserido no banco e no arquivo {data[index][DatabaseField.ID]}  client {data[index][DatabaseField.CNPJ]} \n")
+                    print(
+                        f"Inserido no banco e no arquivo {data[index][DatabaseField.ID]}  client {data[index][DatabaseField.CNPJ]} \n")
+                    self.logger.info(
+                        f"Inserido no banco e no arquivo {data[index][DatabaseField.ID]}  client {data[index][DatabaseField.CNPJ]} \n")
 
                 else:
-                    d5 = MD5()
-                    new_record = md5.encrypter_one(data[index])
+                    print(
+                        f"Inserido no arquivo e nao inserido no banco {data[index][DatabaseField.ID]} client {data[index][DatabaseField.CNPJ]} \n")
+                    self.logger.info(
+                        f"Inserido no arquivo e nao inserido no banco {data[index][DatabaseField.ID]} client {data[index][DatabaseField.CNPJ]} \n")
 
-                    update_request(product, new_record, json_file_old[index])
-                    print(f"Inserido no arquivo e nao inserido no banco {data[index][DatabaseField.ID]} client {data[index][DatabaseField.CNPJ]} \n")
-                    self.logger.info(f"Inserido no arquivo e nao inserido no banco {data[index][DatabaseField.ID]} client {data[index][DatabaseField.CNPJ]} \n")
             return
-

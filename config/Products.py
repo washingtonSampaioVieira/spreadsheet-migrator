@@ -112,6 +112,7 @@ class CIPPClient:
 
 
 class CIPPSolicitation:
+
     filepath = '/run/user/1000/gvfs/smb-share:server=192.168.1.233,share=stor%201/Atendimento/Arquivos 17-18-19/BANCO DE DADOS/PRODUTOS PRIMI/SELOS DIVERSOS INMETRO/CIPP/Obsoleto/Solicitação cliente.xls'
 
     @property
@@ -132,9 +133,7 @@ class CIPPSolicitation:
             DatabaseField.QUANTITY: ('QTD', DataType.INT),
             DatabaseField.MODEL_ID: (self.get_model_id, DataType.STR),
             DatabaseField.STATUS_SOLIC: ('STATUS.SOLIC', DataType.STR),
-            DatabaseField.COD_RASTREIO: ('COD.RASTREIO', DataType.STR)
-
-
+            DatabaseField.TRACKING_CODE: ('COD.RASTREIO', DataType.STR)
         }
 
     @staticmethod

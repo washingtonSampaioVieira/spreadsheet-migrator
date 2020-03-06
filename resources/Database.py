@@ -2,7 +2,6 @@ import os
 from dotenv import load_dotenv
 import mysql.connector as mysql
 
-
 from . import Logger
 from config import DatabaseField
 
@@ -93,22 +92,59 @@ class Database:
             return False
         return True
 
-    def update_status_solicitation(self, solicitation):
+    def insert_delivery(self, solicitation):
+
+        order_id = self.solicitation_exists(solicitation[DatabaseField.ID], DatabaseField.CIPP_ID)
+
+        if order_id is None:
+            return False
+
+        if not solicitation[DatabaseField.TRACKING_CODE]:
+            return False
+
+        query = (
+            'INSERT INTO `tb_delivery` (`id_delivery`, `id_order`, `price`, `tracking_code`, `delivery_at`, '
+            '`created_at`, `updated_at`) VALUES '
+            f'(UUID(), "{order_id}", 0.00, "{solicitation[DatabaseField.TRACKING_CODE]}", null,'
+            f' NOW(),  NOW());')
+
         db = self.connect()
+
         if db is None:
             return False
+        cursor = db.cursor()
+
+        try:
+            cursor.execute(query)
+
+            db.commit()
+            self.logger.info('Create delivery at solicitaion%s' % solicitation)
+
+            row_count = cursor.rowcount
+            return row_count != 0
+
+        except mysql.errors.ProgrammingError as error:
+            print(error)
+            self.logger.error("error creating delivery record: %s" % error.msg)
+            return False
+
+        return True
+
+    def update_status_solicitation(self, solicitation):
+
         id_system_user = self.get_user_from_client_cnpj(solicitation[DatabaseField.CNPJ])
-
         id_status_order = self.get_status_order(solicitation[DatabaseField.STATUS_SOLIC])
-
         id_order = self.solicitation_exists(solicitation[DatabaseField.ID], DatabaseField.CIPP_ID)
 
         if id_system_user and id_status_order and id_order:
             self.update_finished_status(id_order)
         else:
             print("unregistered client")
-            self.logger.info("Unregistered client")
+            self.logger.info(f"Unregistered client, Solicitation: {solicitation}")
             return False
+
+        if solicitation[DatabaseField.STATUS_SOLIC] == DatabaseField.DELIVERED:
+            self.insert_delivery(solicitation)
 
         query = (
             'INSERT INTO `tb_rel_order_status`'
@@ -117,12 +153,17 @@ class Database:
             f'VALUES (UUID(), "{id_status_order}", "{DatabaseField.ID_SYSTEM_USER}", "{id_order}", NOW(), NOW(), NULL)'
         )
 
-        self.logger.info('Create new status solicitaion%s' % solicitation)
+        db = self.connect()
+
+        if db is None:
+            return False
         cursor = db.cursor()
+
         try:
             cursor.execute(query)
 
             db.commit()
+            self.logger.info('Create new status solicitaion%s' % solicitation)
 
             row_count = cursor.rowcount
             db.close()
@@ -157,7 +198,7 @@ class Database:
 
     def get_user_from_client_cnpj(self, cnpj):
         query = ('select id_client_user from tb_client_print_log as cl '
-                 f'inner join tb_client_user as u on u.id_client = cl.id_client  where cl.cnpj = "{cnpj}" limit 1 ')
+                 f'inner join tb_client_user as u on u.id_client = cl.id_client  where cl.cnpj = "{cnpj}" limit 1')
         db = self.connect()
 
         if db is None:
@@ -198,6 +239,7 @@ class Database:
             print(solicitation[DatabaseField.CNPJ])
             print("Nem um propritario cadastrado com o CNPJ desta solicitação")
             return False
+
         solicitation[DatabaseField.CLIENT_USER] = self.get_user_from_client_id(solicitation[DatabaseField.OWNER_ID])
 
         if solicitation[DatabaseField.CLIENT_USER] == 0:
@@ -224,6 +266,12 @@ class Database:
                 solicitation[DatabaseField.FINAL_NUMBER],
             ))
             db.commit()
+            # last_id =
+            solicitation[DatabaseField.ID] = cursor.execute('SELECT last_insert_id()')
+
+            self.update_status_solicitation(solicitation)
+            # Inserted id
+            # Inserir status da solicitação
 
             row_count = cursor.rowcount
             db.close()
